@@ -16,8 +16,8 @@ import type { Category, UpdateView } from '../../domain/types'
 import { useI18n } from '../../i18n/i18n'
 import { useNow } from '../common/hooks'
 import { EmptyState, ReportedIcon } from '../common/ui'
-import { LiveAxis } from './LiveAxis'
 import { useEffect, useRef, useState } from 'react'
+import { LiveAxis } from './LiveAxis'
 
 export const CATEGORY_ICON: Record<Category, typeof Landmark> = {
   politics: Landmark,
@@ -54,14 +54,33 @@ function KindTag({ kind }: { kind: UpdateView['kind'] }) {
   )
 }
 
-function UpdateItem({ item, isNew }: { item: UpdateView; isNew: boolean }) {
+function UpdateItem({
+  item,
+  isNew,
+  isActive,
+  onActivate,
+  itemRef,
+}: {
+  item: UpdateView
+  isNew: boolean
+  isActive: boolean
+  onActivate: (id: string | null) => void
+  itemRef: (el: HTMLLIElement | null) => void
+}) {
   const { t, pick, time, dateTime, age } = useI18n()
   const now = useNow()
   const at = item.timeBasis === 'published' && item.publishedAt ? item.publishedAt : item.firstSeenAt
   const source = pick(item.sourceName)
   const old = item.timeBasis !== 'unknown' && ageTier(at, now) === 'older'
   return (
-    <li className={`update ${item.kind === 'official' ? 'is-official' : ''} ${isNew ? 'is-new' : ''}`}>
+    <li
+      ref={itemRef}
+      className={`update ${item.kind === 'official' ? 'is-official' : ''} ${isNew ? 'is-new' : ''} ${isActive ? 'is-active' : ''}`}
+      onMouseEnter={() => onActivate(item.id)}
+      onMouseLeave={() => onActivate(null)}
+      onFocus={() => onActivate(item.id)}
+      onBlur={() => onActivate(null)}
+    >
       <div className="update-meta">
         <CategoryTag category={item.category} />
         <KindTag kind={item.kind} />
@@ -148,6 +167,19 @@ export function LatestUpdates({
   onRefresh: () => void
 }) {
   const { t } = useI18n()
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const rows = useRef(new Map<string, HTMLLIElement>())
+  // Clicking a marker brings its story into view and flashes it.
+  const select = (id: string) => {
+    const row = rows.current.get(id)
+    if (!row) return
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    row.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' })
+    row.classList.remove('is-flash')
+    void row.offsetWidth
+    row.classList.add('is-flash')
+    setActiveId(id)
+  }
   // Items that arrived after first render pop out of the axis; the flag clears after the animation.
   const seen = useRef<Set<string> | null>(null)
   const [newIds, setNewIds] = useState<ReadonlySet<string>>(new Set())
@@ -188,10 +220,20 @@ export function LatestUpdates({
         )
       ) : (
         <div className="card live-feed">
-          <LiveAxis items={items} newIds={newIds} />
+          <LiveAxis items={items} newIds={newIds} activeId={activeId} onActivate={setActiveId} onSelect={select} />
           <ol className="updates">
             {items.map((item) => (
-              <UpdateItem key={item.id} item={item} isNew={newIds.has(item.id)} />
+              <UpdateItem
+                key={item.id}
+                item={item}
+                isNew={newIds.has(item.id)}
+                isActive={item.id === activeId}
+                onActivate={setActiveId}
+                itemRef={(el) => {
+                  if (el) rows.current.set(item.id, el)
+                  else rows.current.delete(item.id)
+                }}
+              />
             ))}
           </ol>
         </div>

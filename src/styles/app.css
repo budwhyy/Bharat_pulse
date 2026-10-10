@@ -965,29 +965,72 @@ button {
 }
 
 .live-axis {
-  padding: 34px 20px 14px;
+  padding: 12px 4px 6px;
   border-bottom: 1px solid var(--line);
-  background: linear-gradient(to right, transparent, color-mix(in srgb, var(--accent) 7%, transparent));
+  background: linear-gradient(to right, transparent 40%, color-mix(in srgb, var(--accent) 6%, transparent));
 }
 
-.live-axis-track {
+.live-axis-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.live-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 650;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.live-clock-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--good);
+}
+
+.live-track {
   position: relative;
+}
+
+.live-line,
+.live-flow {
+  position: absolute;
+  bottom: 21px;
   height: 2px;
-  background: var(--line-strong);
   border-radius: 2px;
+}
+
+.live-line {
+  background: var(--line-strong);
+}
+
+/* Time since the newest story: flows toward "now". */
+.live-flow {
+  height: 3px;
+  bottom: 20.5px;
+  background: repeating-linear-gradient(90deg, var(--accent) 0 6px, transparent 6px 11px);
+  opacity: 0.8;
 }
 
 .live-tick {
   position: absolute;
-  top: -4px;
+  bottom: 18px;
   width: 1px;
-  height: 10px;
+  height: 8px;
   background: var(--line-strong);
 }
 
 .live-tick span {
   position: absolute;
-  top: 12px;
+  top: 10px;
   left: 0;
   transform: translateX(-50%);
   font-size: 10.5px;
@@ -998,22 +1041,49 @@ button {
 
 .live-node {
   position: absolute;
-  top: -11px;
   display: grid;
   place-items: center;
-  width: 24px;
-  height: 24px;
-  margin-left: -12px;
+  width: 26px;
+  height: 26px;
+  margin-left: -13px;
+  padding: 0;
   border-radius: 50%;
   border: 2px solid var(--line-strong);
   background: var(--surface);
   color: var(--ink-2);
-  transition: left 1s linear;
+  cursor: pointer;
+  transition:
+    left 1s linear,
+    transform 0.15s var(--ease),
+    border-color 0.15s var(--ease);
+}
+
+/* Stem down to the axis, so stacked markers still point at their moment. */
+.live-node::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 1px;
+  height: var(--stem);
+  background: var(--line-strong);
+}
+
+.live-node::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: calc(100% + var(--stem) - 3px);
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  border-radius: 50%;
+  background: var(--line-strong);
 }
 
 .live-node svg {
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
 }
 
 .live-node.is-official {
@@ -1021,37 +1091,77 @@ button {
   color: var(--accent);
 }
 
+.live-node.is-official::after,
+.live-node.is-official::before {
+  background: var(--accent);
+}
+
+.live-node:hover,
+.live-node.is-active {
+  transform: scale(1.18);
+  border-color: var(--ink);
+  color: var(--ink);
+  z-index: 5;
+}
+
 .live-now {
   position: absolute;
-  right: 0;
-  top: -5px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  bottom: 16px;
+  width: 0;
+  height: 12px;
 }
 
 .live-now-dot {
+  position: absolute;
+  left: -6px;
+  top: 0;
   width: 12px;
   height: 12px;
   border-radius: 50%;
   background: var(--good);
-  box-shadow: 0 0 0 4px var(--good-soft);
+  box-shadow: 0 0 0 3px var(--surface);
 }
 
-.live-now-label {
+.live-tip {
   position: absolute;
-  top: -26px;
-  right: 0;
-  font-size: 11.5px;
-  font-weight: 650;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  font-size: 12px;
   color: var(--ink-2);
   white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.live-tip.is-left {
+  transform: translateX(calc(-100% + 13px));
+}
+
+.live-tip.is-right {
+  transform: translateX(-13px);
+}
+
+.live-tip strong {
+  color: var(--ink);
+  margin-right: 4px;
+}
+
+.update.is-active {
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  .live-clock-dot,
   .live-now-dot {
     animation: live-pulse 1.6s ease-out infinite;
+  }
+
+  .live-flow {
+    animation: live-flow 1.2s linear infinite;
   }
 
   .live-node.is-new {
@@ -1061,6 +1171,10 @@ button {
   .update.is-new {
     animation: update-drop 0.7s var(--ease) both;
   }
+
+  .update.is-flash {
+    animation: update-flash 1.2s var(--ease);
+  }
 }
 
 @keyframes live-pulse {
@@ -1068,7 +1182,13 @@ button {
     box-shadow: 0 0 0 0 color-mix(in srgb, var(--good) 55%, transparent);
   }
   100% {
-    box-shadow: 0 0 0 12px transparent;
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+
+@keyframes live-flow {
+  to {
+    background-position: 11px 0;
   }
 }
 
@@ -1092,23 +1212,16 @@ button {
   }
 }
 
+@keyframes update-flash {
+  0%,
+  40% {
+    background: var(--accent-soft);
+  }
+}
+
 .update.is-new {
   background: var(--accent-soft);
   transition: background 2s ease 3s;
-}
-
-@media (max-width: 767px) {
-  .live-axis {
-    padding: 34px 14px 14px;
-  }
-
-  .live-tick span {
-    display: none;
-  }
-
-  .live-tick:nth-child(3n + 1) span {
-    display: block;
-  }
 }
 
 /* ==========================================================================
@@ -1615,98 +1728,220 @@ th.n {
 /* 3D KPI pillars ----------------------------------------------------------- */
 .pillars {
   position: relative;
-  height: 108px;
-  margin: 2px 0;
-  perspective: 500px;
-  perspective-origin: 50% 0;
-  border-radius: var(--radius-sm);
-  cursor: grab;
-  touch-action: pan-x;
-  user-select: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 0 2px;
 }
 
-.pillars:active {
+.pillars-stage {
+  position: relative;
+  height: 92px;
+  perspective: 520px;
+  perspective-origin: 50% 10%;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  border-radius: var(--radius-sm);
+}
+
+.pillars-stage:active {
   cursor: grabbing;
 }
 
-.pillars-plane {
+.pillars-scene {
   position: absolute;
-  inset: 0 0 20px;
-  transform-origin: 50% 80%;
+  inset: 6px 6px 14px;
   transform-style: preserve-3d;
-  transition: transform 0.2s var(--ease);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .pillars-plane {
-    animation: hemi-in 0.7s var(--ease) backwards;
-  }
-}
-
-.pillars-plane svg {
-  width: 100%;
-  height: 100%;
-  overflow: visible;
+  transform-origin: 50% 100%;
+  transition: transform 0.25s var(--ease);
 }
 
 .pillars-floor {
-  fill: var(--surface-2);
+  position: absolute;
+  left: -6%;
+  right: -6%;
+  bottom: 0;
+  height: 70px;
+  transform-origin: 50% 100%;
+  transform: translateZ(35px) rotateX(90deg);
+  background: radial-gradient(ellipse at 50% 50%, var(--surface-3), transparent 70%);
 }
 
-.pillar-face {
-  stroke: var(--surface);
-  stroke-width: 0.5;
+.cuboid {
+  --w: 34px;
+  --d: 22px;
+  position: absolute;
+  bottom: 0;
+  width: var(--w);
+  height: var(--h);
+  transform-style: preserve-3d;
+  transform-origin: 50% 100%;
+  transition: opacity 0.2s var(--ease);
+}
+
+.cuboid.is-dim {
+  opacity: 0.4;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cuboid {
+    animation: pillar-grow 0.7s var(--ease) backwards;
+  }
+}
+
+@keyframes pillar-grow {
+  from {
+    transform: scaleY(0.02);
+  }
+}
+
+.face {
+  position: absolute;
+  background: var(--c);
+}
+
+.face.front,
+.face.back {
+  inset: 0;
+}
+
+.face.front {
+  transform: translateZ(calc(var(--d) / 2));
+  background:
+    linear-gradient(to bottom, rgb(255 255 255 / 0.12), rgb(0 0 0 / 0.1)),
+    var(--c);
+}
+
+.face.back {
+  transform: translateZ(calc(var(--d) / -2)) rotateY(180deg);
+}
+
+.face.left,
+.face.right {
+  top: 0;
+  bottom: 0;
+  width: var(--d);
+  background: linear-gradient(rgb(0 0 0 / 0.34), rgb(0 0 0 / 0.34)), var(--c);
+}
+
+.face.left {
+  left: calc(var(--d) / -2);
+  transform: rotateY(-90deg);
+}
+
+.face.right {
+  left: calc(var(--w) - var(--d) / 2);
+  transform: rotateY(90deg);
+}
+
+.face.top {
+  left: 0;
+  right: 0;
+  height: var(--d);
+  top: calc(var(--d) / -2);
+  transform: rotateX(90deg);
+  background: linear-gradient(rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.3)), var(--c);
 }
 
 .pillars-target {
-  stroke: var(--ink-2);
-  stroke-width: 0.8;
-  stroke-dasharray: 2 1.5;
-}
-
-.pillars-target-label {
-  fill: var(--ink-2);
-  font-size: 8px;
-  font-weight: 600;
-}
-
-.pillars-labels {
   position: absolute;
-  inset: auto 0 0;
+  left: -4%;
+  right: -4%;
+  height: 0;
+  border-top: 1.5px dashed var(--ink);
+  transform: translateZ(14px);
+  opacity: 0.85;
+}
+
+.pillars-reset {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink-2);
+}
+
+.pillars-reset:hover {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+
+.pillars-reset svg {
+  width: 14px;
+  height: 14px;
+}
+
+@media (max-width: 767px), (pointer: coarse) {
+  .pillars-reset {
+    width: 44px;
+    height: 44px;
+    top: -6px;
+  }
+}
+
+.pillars-values {
   display: grid;
   gap: 4px;
-  font-size: 11px;
-  color: var(--ink-3);
   text-align: center;
 }
 
-.pillars-labels li {
+.pillars-values li {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 2px 0;
+  border-radius: 4px;
+  transition: background-color 0.15s var(--ease);
+}
+
+.pillars-values li.is-hover {
+  background: var(--surface-2);
+}
+
+.pillars-values strong {
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--ink-2);
+}
+
+.pillars-values span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 11px;
+  color: var(--ink-3);
 }
 
-.pillars-labels .is-now {
+.pillars-values .is-now strong,
+.pillars-values .is-now span {
   color: var(--ink);
-  font-weight: 600;
 }
 
-.pillars-tip {
-  position: absolute;
-  right: 0;
-  top: 0;
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow);
-  font-size: 12px;
-  color: var(--ink-2);
-  pointer-events: none;
+.pillars-legend {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--ink-3);
 }
 
-.pillars-tip strong {
-  color: var(--ink);
+.pillars-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pillars-legend-line {
+  width: 16px;
+  border-top: 1.5px dashed var(--ink-2);
 }
 
 /* 3D hemicycle ------------------------------------------------------------- */
@@ -1823,27 +2058,58 @@ th.n {
   color: var(--ink-3);
 }
 
-.hemi-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 16px;
-  font-size: 12.5px;
-  color: var(--ink-2);
+.hemi-wrap {
+  position: relative;
 }
 
-.hemi-controls label {
+.hemi-reset {
+  position: absolute;
+  top: 8px;
+  right: 8px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  flex: 1 1 140px;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 12px 4px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 600;
+  box-shadow: var(--shadow);
 }
 
-.hemi-controls input[type='range'] {
-  flex: 1;
-  min-width: 0;
-  accent-color: var(--accent);
-  min-height: 32px;
+.hemi-reset:hover {
+  background: var(--surface-2);
+}
+
+.hemi-reset svg {
+  width: 14px;
+  height: 14px;
+}
+
+.hemi-hint {
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+
+.hemi-hint svg {
+  width: 14px;
+  height: 14px;
+}
+
+@media (max-width: 767px), (pointer: coarse) {
+  .hemi-reset {
+    min-height: 44px;
+  }
 }
 
 .hemi-bloc {
@@ -1875,7 +2141,7 @@ th.n {
 }
 
 .hemi-legend {
-  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(142px, 1fr));
 }
 
 .hemi-legend li {
@@ -1884,7 +2150,6 @@ th.n {
 
 .hemi-bloc > span:not(.swatch) {
   min-width: 0;
-  overflow-wrap: break-word;
 }
 
 .hemi-bloc strong {
@@ -1900,9 +2165,6 @@ th.n {
     min-height: 44px;
   }
 
-  .hemi-controls input[type='range'] {
-    min-height: 44px;
-  }
 }
 
 /* ==========================================================================

@@ -1,4 +1,4 @@
-import { RotateCcw } from 'lucide-react'
+import { Move3d, RotateCcw } from 'lucide-react'
 import { useId, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { useI18n } from '../../i18n/i18n'
 
@@ -58,7 +58,7 @@ export function layoutSeats(total: number): { seats: Seat[]; seatR: number } {
 }
 
 /** Stage + controls + legend; ChartCard reserves this height so nothing shifts on mount. */
-export const HEMICYCLE_HEIGHT = 400
+export const HEMICYCLE_HEIGHT = 330
 
 const TILT = { min: 0, max: 64, initial: 48 }
 const SPIN = { min: -35, max: 35, initial: 0 }
@@ -146,6 +146,7 @@ export function Hemicycle({
 
   return (
     <div className="hemi">
+      <div className="hemi-wrap">
       <div
         className="hemi-stage"
         role="img"
@@ -203,20 +204,15 @@ export function Hemicycle({
             {hover && <span className="hemi-tip-sub"> · {t('politics.hemi.seat', { seat: hover.seat, total })}</span>}
           </p>
         )}
+        <p className="hemi-hint" aria-hidden="true">
+          <Move3d aria-hidden="true" />
+          {t('politics.hemi.drag')}
+        </p>
       </div>
-
-      <div className="hemi-controls">
-        <label>
-          <span>{t('politics.hemi.tilt')}</span>
-          <input type="range" min={TILT.min} max={TILT.max} value={tilt} onChange={(e) => setTilt(Number(e.target.value))} />
-        </label>
-        <label>
-          <span>{t('politics.hemi.turn')}</span>
-          <input type="range" min={SPIN.min} max={SPIN.max} value={spin} onChange={(e) => setSpin(Number(e.target.value))} />
-        </label>
+      {(
         <button
           type="button"
-          className="icon-btn bordered"
+          className="hemi-reset"
           aria-label={t('politics.hemi.reset')}
           onClick={() => {
             setTilt(TILT.initial)
@@ -224,7 +220,9 @@ export function Hemicycle({
           }}
         >
           <RotateCcw aria-hidden="true" />
+          <span>{t('politics.hemi.resetShort')}</span>
         </button>
+      )}
       </div>
 
       <ul className="strip-legend hemi-legend" aria-label={t('politics.hemi.highlight')}>
