@@ -1460,6 +1460,202 @@ th.n {
   font-size: 12px;
 }
 
+/* 3D hemicycle ------------------------------------------------------------- */
+.hemi {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hemi-stage {
+  position: relative;
+  height: 250px;
+  perspective: 900px;
+  perspective-origin: 50% 20%;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: radial-gradient(120% 90% at 50% 100%, var(--surface-2), transparent 70%);
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.hemi-stage:active {
+  cursor: grabbing;
+}
+
+.hemi-plane {
+  position: absolute;
+  inset: 8px 4% 0;
+  transform-origin: 50% 90%;
+  transform-style: preserve-3d;
+  transition: transform 0.25s var(--ease);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hemi-plane {
+    animation: hemi-in 0.8s var(--ease) backwards;
+  }
+}
+
+@keyframes hemi-in {
+  from {
+    transform: rotateX(70deg) rotateZ(0deg) scale(0.9);
+    opacity: 0;
+  }
+}
+
+.hemi-plane svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.hemi-well {
+  fill: var(--surface-3);
+}
+
+.hemi-dais {
+  fill: var(--ink-3);
+}
+
+.hemi-seat {
+  stroke: var(--surface);
+  stroke-width: 0.35;
+  cursor: pointer;
+}
+
+.hemi-seat:hover {
+  stroke: var(--ink);
+  stroke-width: 0.6;
+}
+
+.hemi-seats g {
+  transition: opacity 0.2s var(--ease);
+}
+
+.hemi-majority {
+  stroke: var(--ink);
+  stroke-width: 0.8;
+  stroke-dasharray: 2 1.5;
+}
+
+.hemi-badge {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.hemi-tip {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 20px);
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  font-size: 12.5px;
+  pointer-events: none;
+}
+
+.hemi-tip-sub {
+  color: var(--ink-3);
+}
+
+.hemi-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.hemi-controls label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 140px;
+}
+
+.hemi-controls input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+  min-height: 32px;
+}
+
+.hemi-bloc {
+  display: grid;
+  grid-template-columns: 12px 1fr;
+  gap: 2px 8px;
+  align-items: center;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  text-align: left;
+  font-size: 13px;
+}
+
+.hemi-bloc:hover {
+  background: var(--surface-2);
+}
+
+.hemi-bloc[aria-pressed='true'] {
+  border-color: var(--line-strong);
+  background: var(--surface-2);
+}
+
+.hemi-bloc .swatch {
+  width: 12px;
+  height: 12px;
+}
+
+.hemi-legend {
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+}
+
+.hemi-legend li {
+  display: block;
+}
+
+.hemi-bloc > span:not(.swatch) {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.hemi-bloc strong {
+  grid-column: 2;
+  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 767px), (pointer: coarse) {
+  .hemi-bloc {
+    min-height: 44px;
+  }
+
+  .hemi-controls input[type='range'] {
+    min-height: 44px;
+  }
+}
+
 /* ==========================================================================
    Timeline
    ========================================================================== */

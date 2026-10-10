@@ -14,7 +14,7 @@ import { useI18n } from '../../i18n/i18n'
 import { ChartCard, Legend } from '../charts/ChartCard'
 import { HBarPlot } from '../charts/lazyPlots'
 import type { HBarDatum } from '../charts/plots'
-import { ShareStrip } from '../charts/ShareStrip'
+import { HEMICYCLE_HEIGHT, Hemicycle } from './Hemicycle'
 import { SegmentedTabs, useStableId } from '../common/ui'
 import { EventList } from '../timeline/Timeline'
 
@@ -53,7 +53,7 @@ function SeatCard({ dist }: { dist: SeatDistribution }) {
     <ChartCard
       title={pick(dist.title)}
       subtitle={t('politics.seats.sub', { total: dist.total, majority })}
-      height={124}
+      height={HEMICYCLE_HEIGHT}
       summary={summary}
       meta={electionMeta(dist)}
       table={
@@ -81,17 +81,11 @@ function SeatCard({ dist }: { dist: SeatDistribution }) {
         </table>
       }
     >
-      <ShareStrip
+      <Hemicycle
         label={summary}
         total={dist.total}
-        marker={{ at: majority, label: t('politics.seats.majority', { count: majority }) }}
-        segments={dist.blocs.map((bloc) => ({
-          key: bloc.id,
-          label: pick(bloc.name),
-          value: bloc.seats,
-          color: BLOC_COLOR[bloc.id],
-          detail: `${bloc.seats} · ${num((bloc.seats / dist.total) * 100, 0)}%`,
-        }))}
+        majority={majority}
+        blocs={dist.blocs.map((bloc) => ({ id: bloc.id, label: pick(bloc.name), seats: bloc.seats, color: BLOC_COLOR[bloc.id] }))}
       />
     </ChartCard>
   )

@@ -85,7 +85,7 @@ export function ChartCard({
   const content = (
     <>
       {legend}
-      <div className="chart-body" style={{ height }}>
+      <div className="chart-body" style={{ minHeight: height }}>
         {empty ? (
           <EmptyState title={t('chart.noData')} hint={t('chart.noDataHint')} icon={<BarChart3 aria-hidden="true" />} />
         ) : mounted ? (
