@@ -66,6 +66,31 @@ them on a first fetch, the 10 newest undated ones per routine refresh, 3 at a ti
 Categories come from deterministic keyword rules (`src/domain/categorize.ts`, English and Hindi)
 plus a weak per-source prior. Daily digests / generic live blogs are dropped.
 
+## Source discovery
+
+`src/server/discovery.ts`, run by `DashboardService.discover()` at most once an hour (started in
+the background by a snapshot request once some stories are cached, or by `GET /api/scan`).
+
+1. **Crawl** — for each publisher in `src/server/publishers.ts`: best-first, breadth-first from
+   its seed pages; a fetched page that parses as a feed is a candidate, otherwise its feed links
+   (`<link rel="alternate">` and feed-looking anchors) are queued, up to depth 2 and 10 fetches.
+   Links must stay on the publisher's hosts (FeedBurner paths are restricted per publisher).
+2. **Section rule** — `isNationalSection`: the URL path, feed title and link text (with the
+   publisher's own name removed) must contain a national term — India, national, politics,
+   economy, business, policy, government, elections, देश, राष्ट्रीय, राजनीति … — and nothing
+   excluded (sport, entertainment, world, lifestyle, state/city sections, …). Press-release
+   feeds qualify only for official publishers. Catch-all feeds (top, latest, breaking, home) mix
+   in world and entertainment news and are not accepted.
+3. **Judge** — `judgeFeed`: ≥ 5 items, ≥ half dated, newest within 24 h, publisher's script,
+   ≥ 50 % of items in a national category, ≥ 40 % of items not already carried by another
+   source. Survivors are ranked by recent volume, relevance and novelty.
+4. **Admit / retire** — best feeds fill the publisher's remaining slots (3 per publisher
+   including fixed sources; 24 discovered overall). Each scan first retires discovered feeds
+   with 3 consecutive failures, 72 h without a new story, or that no longer meet the rules.
+
+Discovered feeds are ordinary sources from then on: same fetcher, allowlist, cadence, health,
+dedupe and five-update selection, labelled "Auto-discovered" in Settings.
+
 ## Modules
 
 ```
@@ -73,9 +98,10 @@ src/
   domain/        Pure, isomorphic logic — types, canonical URLs, dedupe/merge, categorization,
                  selection, freshness labels. Fully unit-tested.
   data/          Release records and context from the 11 Oct 2026 briefing, every figure cited.
-  server/        Source registry, HTTP fetcher, adapters (rss, news, pib, rbi, worldbank),
-                 file cache, DashboardService (refresh orchestration), snapshot builder,
-                 server functions.
+  server/        Source registry, vetted publishers, discovery scanner, HTTP fetcher,
+                 adapters (rss, news, pib, rbi, worldbank), file cache, DashboardService
+                 (refresh + discovery orchestration), snapshot builder, server functions.
+  routes/api/    GET /api/scan — scheduler hook for hosts that sleep between requests.
   queries/       TanStack Query options for the snapshot (poll cadence).
   i18n/          English/Hindi message catalogue + Intl formatters (always IST).
   preferences/   Theme + language: device defaults, read from localStorage after hydration.

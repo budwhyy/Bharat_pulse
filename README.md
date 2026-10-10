@@ -37,15 +37,28 @@ npm run test:live      # opt-in: hits the real sources and prints what each retu
 
 ## Sources
 
-| Source | Kind | Language | Used for |
-| --- | --- | --- | --- |
-| PIB RSS + release pages | Official | EN, HI | Announcements (publish time read from each release) |
-| RBI press-release RSS | Official | EN | Announcements |
-| RBI homepage "Policy Rates" | Official | — | Repo rate |
-| The Hindu, Hindustan Times, BBC News, Mint | Reported | EN | Headlines + short teaser, linked |
-| BBC Hindi, Amar Ujala, Live Hindustan | Reported | HI | Headlines + short teaser, linked |
-| World Bank WDI API | International | — | Population, age structure, fertility, female LFPR |
-| Bharat Pulse briefing (11 Oct 2026) | Release records | EN/HI | GDP, CPI, WPI, PLFS, UPI, elections, timeline, policies, risks — each with its citation |
+**Fixed registry (24 news feeds + 2 indicator sources), checked every 10 minutes:**
+
+| Kind | Sources |
+| --- | --- |
+| Official | PIB (English, Hindi; publish time read from each release), RBI press releases, RBI notifications, SEBI |
+| English publishers | The Hindu, Hindustan Times, The Indian Express, The Times of India, NDTV, The Economic Times, Business Standard, Mint, Scroll, News18, Firstpost, BBC News |
+| Hindi publishers | BBC Hindi, Amar Ujala, Live Hindustan, Dainik Bhaskar, NDTV India, Zee News Hindi |
+| Indicators | RBI policy rates (homepage), World Bank WDI (population, age structure, fertility, female LFPR) |
+| Release records | GDP, CPI, WPI, PLFS, UPI, elections, timeline, policies, risks — from the 11 Oct 2026 briefing, each cited |
+
+**Hourly discovery scanner.** Every 60 minutes the server crawls the RSS directories and
+homepages of a vetted list of 18 publishers (two levels deep, ten fetches per publisher) and
+judges every feed it finds. A feed is added only if it is a national section (not sport,
+entertainment, world, state/city or press-release wire copy), has at least five items, has a
+story from the last 24 hours, is in the publisher's language, is mostly about national affairs,
+and isn't mostly stories we already carry. At most three feeds per publisher and 24 discovered
+feeds in total; discovered feeds that fail three times in a row, go quiet for 72 hours or stop
+meeting the rules are retired. The scanner never leaves the vetted publisher list. Its status
+is in **Settings → Data sources**.
+
+On hosts that sleep between requests (Vercel), point any free scheduler at `GET /api/scan` once
+an hour; it only does work that is already due, so extra calls cost nothing.
 
 No market data is shown. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the data boundary,
 freshness rules, the five-update selection and module layout.

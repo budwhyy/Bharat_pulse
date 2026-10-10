@@ -3051,6 +3051,60 @@ dialog.settings::backdrop {
   color: var(--ink-3);
 }
 
+.discovery-status {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.discovery-status svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 1px;
+  color: var(--accent);
+}
+
+.discovery-status strong {
+  display: block;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .discovery-status svg.is-scanning {
+    animation: spin 2.4s linear infinite;
+  }
+}
+
+.source-group + .source-group {
+  margin-top: 14px;
+}
+
+.source-group h4 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+
+.source-count {
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
 .source-list {
   display: flex;
   flex-direction: column;

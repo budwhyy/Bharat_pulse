@@ -2,6 +2,7 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { SourceState, UpdateRecord } from '../domain/types'
 import type { WbSeries, WbSeriesKey } from './adapters/worldbank'
+import type { NewsSource } from './sources'
 
 export interface RbiObservation {
   repo: number
@@ -16,16 +17,37 @@ export interface RbiObservation {
 
 export type WbCachedSeries = WbSeries & { checkedAt: string }
 
+export interface DiscoveryState {
+  lastRunAt: string | null
+  lastError: string | null
+  /** Pages and feeds fetched in the last scan. */
+  checked: number
+  added: number
+  retired: number
+  /** Feeds added by the scanner, fetched like any other source. */
+  sources: Record<string, NewsSource>
+}
+
+export const emptyDiscovery = (): DiscoveryState => ({
+  lastRunAt: null,
+  lastError: null,
+  checked: 0,
+  added: 0,
+  retired: 0,
+  sources: {},
+})
+
 export interface CacheData {
   version: 1
   sources: Record<string, SourceState>
   updates: Record<string, UpdateRecord>
   rbi: RbiObservation | null
   worldBank: Partial<Record<WbSeriesKey, WbCachedSeries>>
+  discovery: DiscoveryState
 }
 
 export function emptyCache(): CacheData {
-  return { version: 1, sources: {}, updates: {}, rbi: null, worldBank: {} }
+  return { version: 1, sources: {}, updates: {}, rbi: null, worldBank: {}, discovery: emptyDiscovery() }
 }
 
 export interface CacheStore {

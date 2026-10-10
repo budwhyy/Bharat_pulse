@@ -187,6 +187,11 @@ export function buildSnapshot(
   sources: SourceDef[],
   now: Date,
   refreshing: boolean,
+  discovery: { running: boolean; enabled: boolean; intervalMinutes: number } = {
+    running: false,
+    enabled: false,
+    intervalMinutes: 60,
+  },
 ): DashboardSnapshot {
   const health = new Map<string, Health>(
     sources.map((s) => [s.id, sourceHealth(data.sources[s.id], s.refreshMinutes, now)]),
@@ -206,6 +211,7 @@ export function buildSnapshot(
       lastAttemptAt: state?.lastAttemptAt ?? null,
       lastSuccessAt: state?.lastSuccessAt ?? null,
       lastError: state?.lastError ?? null,
+      discovered: s.type === 'news' && Boolean(s.discovered),
     }
   })
 
@@ -238,5 +244,18 @@ export function buildSnapshot(
     sources: sourceViews,
     kpis: Object.fromEntries(kpiEntries) as Record<KpiId, Kpi>,
     datasets: buildDatasets(data, health.get('world-bank') ?? 'pending'),
+    discovery: {
+      enabled: discovery.enabled,
+      running: discovery.running,
+      lastRunAt: data.discovery?.lastRunAt ?? null,
+      nextRunAt: data.discovery?.lastRunAt
+        ? new Date(Date.parse(data.discovery.lastRunAt) + discovery.intervalMinutes * 60_000).toISOString()
+        : null,
+      checked: data.discovery?.checked ?? 0,
+      added: data.discovery?.added ?? 0,
+      retired: data.discovery?.retired ?? 0,
+      active: Object.keys(data.discovery?.sources ?? {}).length,
+      lastError: data.discovery?.lastError ?? null,
+    },
   }
 }

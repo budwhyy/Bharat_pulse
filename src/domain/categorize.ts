@@ -79,10 +79,15 @@ const HI: Record<Scored, string[]> = {
 const PRIORITY: readonly Scored[] = ['risk', 'politics', 'economy', 'policy', 'society']
 
 /**
- * Daily digests and generic live blogs ("read today's top news") are not news
- * items in their own right; they are dropped before selection.
+ * Not news items in their own right, dropped before selection: daily digests
+ * and generic live blogs ("read today's top news"), and horoscopes, which some
+ * home-page feeds mix in.
  */
 const ROUNDUP = [
+  /\b(horoscope|zodiac|tarot)\b/i,
+  /राशिफल|ज्योतिष|टैरो/u,
+  /^(मेष|वृषभ|मिथुन|कर्क|सिंह|कन्या|तुला|वृश्चिक|धनु|मकर|कुंभ|कुम्भ|मीन)\s+राशि/u,
+  /^(aries|taurus|gemini|cancer|leo|virgo|libra|scorpio|sagittarius|capricorn|aquarius|pisces)\b.{0,40}(today|daily|weekly|prediction)/i,
   /\blive\s+blog\b/i,
   /\b(top|morning|evening|today'?s)\s+(news|headlines)\b/i,
   /\bnews\s+(today\s+)?live\b/i,

@@ -175,6 +175,20 @@ export interface SourceView {
   lastSuccessAt: string | null
   /** Short, sanitized reason for the last failure. */
   lastError: string | null
+  /** Added automatically by the hourly discovery scan. */
+  discovered: boolean
+}
+
+export interface DiscoveryView {
+  enabled: boolean
+  running: boolean
+  lastRunAt: string | null
+  nextRunAt: string | null
+  checked: number
+  added: number
+  retired: number
+  active: number
+  lastError: string | null
 }
 
 export interface UpdateView extends UpdateRecord {
@@ -192,4 +206,5 @@ export interface DashboardSnapshot {
   sources: SourceView[]
   kpis: Record<KpiId, Kpi>
   datasets: Datasets
+  discovery: DiscoveryView
 }

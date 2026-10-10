@@ -5,7 +5,7 @@ export const RETENTION_DAYS = 3
 /** Even after a long outage, keep this many of each source's newest items as the last verified copy. */
 export const KEEP_PER_SOURCE = 30
 /** Upper bound per source so the cache file stays small. */
-export const MAX_PER_SOURCE = 200
+export const MAX_PER_SOURCE = 120
 
 export interface MergeResult {
   records: Record<string, UpdateRecord>

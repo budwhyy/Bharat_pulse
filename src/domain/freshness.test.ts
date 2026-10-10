@@ -87,6 +87,10 @@ describe('categorize', () => {
     ['Delhi protest: police detain hundreds near Jantar Mantar', false],
     ['RBI raises repo rate by 25 bps', false],
     ['बिहार में चुनाव की तैयारी तेज', false],
+    ['मकर राशि', true],
+    ['आज का राशिफल 11 अक्टूबर', true],
+    ['Capricorn horoscope today: a good day for finances', true],
+    ['Leo Varadarajan named new envoy', false],
   ] as const)('roundup filter: %s → %s', (title, expected) => {
     expect(isRoundup(title)).toBe(expected)
   })

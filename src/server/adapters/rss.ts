@@ -43,6 +43,11 @@ function atomLink(node: unknown): string | null {
 
 /** Parses RSS 2.0 or Atom into raw items. Throws if the document is not a feed. */
 export function parseFeed(xml: string): RawFeedItem[] {
+  return parseFeedDocument(xml).items
+}
+
+/** Like parseFeed, plus the channel title (used to name discovered feeds). */
+export function parseFeedDocument(xml: string): { title: string | null; items: RawFeedItem[] } {
   const doc = parser.parse(xml.replace(/^﻿/, '')) as Record<string, any>
   const isRss = typeof doc?.rss === 'object' && doc.rss !== null && 'channel' in doc.rss
   const isAtom = doc != null && 'feed' in doc
@@ -50,20 +55,21 @@ export function parseFeed(xml: string): RawFeedItem[] {
   const rssItems: any[] | undefined = doc.rss?.channel?.item
   const atomEntries: any[] | undefined = doc.feed?.entry
 
+  const title = toPlainText(text(doc.rss?.channel?.title) ?? text(doc.feed?.title) ?? '') || null
   if (rssItems) {
-    return rssItems.map((item) => ({
+    return { title, items: rssItems.map((item) => ({
       title: toPlainText(text(item.title) ?? ''),
       link: (text(item.link) ?? '').trim(),
       guid: text(item.guid)?.trim() || null,
       pubDate: text(item.pubDate) ?? text(item['dc:date']) ?? null,
       description: text(item.description),
-    }))
+    })) }
   }
-  return (atomEntries ?? []).map((entry) => ({
+  return { title, items: (atomEntries ?? []).map((entry) => ({
     title: toPlainText(text(entry.title) ?? ''),
     link: (atomLink(entry.link) ?? '').trim(),
     guid: text(entry.id)?.trim() || null,
     pubDate: text(entry.published) ?? text(entry.updated) ?? null,
     description: text(entry.summary),
-  }))
+  })) }
 }

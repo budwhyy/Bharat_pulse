@@ -6,10 +6,20 @@ import { parsePibRelease } from './adapters/pib'
 import { parseRbiRates } from './adapters/rbi'
 import { parseFeed } from './adapters/rss'
 import { WB_SERIES, parseWorldBank, worldBankUrl, type WbSeriesKey } from './adapters/worldbank'
-import type { CacheData, CacheStore } from './cache'
+import { emptyDiscovery, type CacheData, type CacheStore } from './cache'
+import {
+  DISCOVERY_INTERVAL_MINUTES,
+  MAX_DISCOVERED,
+  RETIRE_AFTER_FAILURES,
+  RETIRE_AFTER_HOURS,
+  discoverFeeds,
+  isNationalSection,
+} from './discovery'
 import type { Fetcher } from './http'
+import { PUBLISHERS, type Publisher } from './publishers'
 import { buildSnapshot } from './snapshot'
 import { SOURCES, type IndicatorSource, type NewsSource, type SourceDef } from './sources'
+import { sortTime } from '../domain/select'
 
 export interface ServiceOptions {
   store: CacheStore
@@ -22,7 +32,17 @@ export interface ServiceOptions {
   manualMinIntervalMs?: number
   /** PIB release pages fetched per routine refresh to learn publish times (all on a first fetch). */
   pibEnrichLimit?: number
+  /** Publishers the discovery scanner may explore. Defaults to none when custom sources are injected. */
+  publishers?: Publisher[]
   log?: (message: string) => void
+}
+
+export interface DiscoverySummary {
+  ran: boolean
+  checked: number
+  added: number
+  retired: number
+  active: number
 }
 
 const MINUTE = 60_000
@@ -72,12 +92,97 @@ export class DashboardService {
   private data: CacheData | null = null
   private loading: Promise<CacheData> | null = null
   private inflight: Promise<void> | null = null
+  private discovering: Promise<DiscoverySummary> | null = null
   private readonly sources: SourceDef[]
+  private readonly publishers: Publisher[]
   private readonly now: () => Date
 
   constructor(private readonly options: ServiceOptions) {
     this.sources = options.sources ?? SOURCES
+    this.publishers = options.publishers ?? (options.sources ? [] : PUBLISHERS)
     this.now = options.now ?? (() => new Date())
+  }
+
+  /** Fixed registry plus feeds the scanner has added. */
+  private allSources(): SourceDef[] {
+    return [...this.sources, ...Object.values(this.data?.discovery?.sources ?? {})]
+  }
+
+  discoveryDue(now: Date): boolean {
+    if (this.publishers.length === 0) return false
+    const last = this.data?.discovery?.lastRunAt
+    return !last || now.getTime() - Date.parse(last) >= DISCOVERY_INTERVAL_MINUTES * MINUTE
+  }
+
+  /** Runs a discovery scan if one is due (or forced); concurrent callers share the same run. */
+  async discover(force = false): Promise<DiscoverySummary> {
+    const data = await this.load()
+    data.discovery ??= emptyDiscovery()
+    if (!force && !this.discoveryDue(this.now())) {
+      return { ran: false, checked: 0, added: 0, retired: 0, active: Object.keys(data.discovery.sources).length }
+    }
+    this.discovering ??= this.runDiscovery().finally(() => {
+      this.discovering = null
+    })
+    return this.discovering
+  }
+
+  private async runDiscovery(): Promise<DiscoverySummary> {
+    const data = this.data!
+    const state = data.discovery
+    const now = this.now()
+
+    // Retire discovered feeds that keep failing or have gone quiet.
+    let retired = 0
+    for (const source of Object.values(state.sources)) {
+      const failures = data.sources[source.id]?.consecutiveFailures ?? 0
+      const newest = Object.values(data.updates)
+        .filter((u) => u.sourceId === source.id)
+        .reduce((max, u) => Math.max(max, sortTime(u)), Date.parse(source.discoveredAt ?? now.toISOString()))
+      // Re-checked against today's rules too, so tightening a rule cleans up earlier finds.
+      const publisher = this.publishers.find((p) => p.id === source.publisherId)
+      const qualifies = publisher ? isNationalSection(source.url, publisher, source.name.en) : false
+      if (!qualifies || failures >= RETIRE_AFTER_FAILURES || now.getTime() - newest > RETIRE_AFTER_HOURS * 3600_000) {
+        delete state.sources[source.id]
+        delete data.sources[source.id]
+        for (const [id, update] of Object.entries(data.updates)) if (update.sourceId === source.id) delete data.updates[id]
+        retired += 1
+      }
+    }
+
+    let added = 0
+    let checked = 0
+    try {
+      const result = await discoverFeeds({
+        fetcher: this.options.fetcher,
+        now,
+        publishers: this.publishers,
+        sources: this.allSources(),
+        updates: data.updates,
+      })
+      checked = result.checked
+      for (const source of result.accepted) {
+        if (Object.keys(state.sources).length >= MAX_DISCOVERED) break
+        state.sources[source.id] = source
+        added += 1
+      }
+      state.lastError = null
+      this.options.log?.(
+        `discovery: checked ${checked}, added ${added}, retired ${retired}; rejected ${JSON.stringify(result.rejected)}`,
+      )
+    } catch (error) {
+      state.lastError = errorText(error)
+    }
+    state.lastRunAt = now.toISOString()
+    state.checked = checked
+    state.added = added
+    state.retired = retired
+    try {
+      await this.options.store.save(data)
+    } catch (error) {
+      this.options.log?.(`cache save failed: ${errorText(error)}`)
+    }
+    return { ran: true, checked, added, retired, active: Object.keys(state.sources).length }
   }
 
   private async load(): Promise<CacheData> {
@@ -100,13 +205,21 @@ export class DashboardService {
   }
 
   private build(): DashboardSnapshot {
-    return buildSnapshot(this.data!, this.sources, this.now(), this.inflight !== null)
+    return buildSnapshot(this.data!, this.allSources(), this.now(), this.inflight !== null, {
+      running: this.discovering !== null,
+      enabled: this.publishers.length > 0,
+      intervalMinutes: DISCOVERY_INTERVAL_MINUTES,
+    })
   }
 
   async snapshot(): Promise<DashboardSnapshot> {
     const data = await this.load()
+    data.discovery ??= emptyDiscovery()
     const now = this.now()
-    const due = this.sources.filter((s) => this.isDue(s, now))
+    // Hourly scan for new feeds runs in the background and never delays a response. It waits
+    // until some stories are cached, because its duplicate-coverage check compares against them.
+    if (this.discoveryDue(now) && !this.discovering && Object.keys(data.updates).length > 0) void this.discover()
+    const due = this.allSources().filter((s) => this.isDue(s, now))
     if (due.length && !this.inflight) {
       const run = this.start(due)
       const cold = !Object.values(data.sources).some((s) => s.lastSuccessAt)
@@ -121,7 +234,7 @@ export class DashboardService {
     if (this.inflight) await Promise.race([this.inflight, timeout(20_000)])
     const now = this.now()
     const minGap = this.options.manualMinIntervalMs ?? MINUTE
-    const due = this.sources.filter((s) => {
+    const due = this.allSources().filter((s) => {
       const state = data.sources[s.id]
       const since = state?.lastAttemptAt ? now.getTime() - Date.parse(state.lastAttemptAt) : Infinity
       if (s.type === 'news') return since >= minGap

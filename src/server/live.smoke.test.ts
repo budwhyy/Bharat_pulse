@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { emptyCache, memoryStore } from './cache'
 import { httpFetcher } from './http'
 import { DashboardService } from './service'
-import { SOURCES } from './sources'
+import { SOURCES, type SourceDef } from './sources'
 
 // `npm run test:live` (any OS) or LIVE=1. npm exposes the running script's name.
 const LIVE = process.env.LIVE === '1' || process.env.npm_lifecycle_event === 'test:live'
@@ -35,5 +35,14 @@ describe.runIf(LIVE)('live sources', () => {
 
     expect(snap.updates.en.length).toBe(5)
     expect(snap.updates.hi.length).toBe(5)
-  }, 120_000)
+
+    const scan = await service.discover(true)
+    const after = await service.snapshot()
+    console.log(`
+discovery: checked ${scan.checked}, added ${scan.added}`)
+    for (const s of after.sources.filter((x) => x.discovered)) console.log('  +', s.name.en, s.lang)
+    await service.refresh(service["allSources"]().filter((s: SourceDef) => s.type === "news" && Boolean(s.discovered)))
+    const final = await service.snapshot()
+    for (const s of final.sources.filter((x) => x.discovered)) console.log('  ', s.health.padEnd(6), s.name.en, s.lastError ?? '')
+  }, 300_000)
 })

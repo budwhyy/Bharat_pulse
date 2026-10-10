@@ -106,7 +106,7 @@ function DashboardPage() {
           />
         }
         footer={<SiteFooter onOpenSources={openSources} />}
-        dialog={<SettingsDialog ref={settings} sources={snapshot.sources} />}
+        dialog={<SettingsDialog ref={settings} sources={snapshot.sources} discovery={snapshot.discovery} />}
       >
         <div className="section-view" key={section}>
           <div className="section-head">
