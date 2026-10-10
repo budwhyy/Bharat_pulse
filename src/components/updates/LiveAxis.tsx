@@ -32,6 +32,7 @@ function useWidth<T extends HTMLElement>(): [RefObject<T | null>, number] {
     const el = ref.current
     if (!el) return
     setWidth(el.clientWidth)
+    if (typeof ResizeObserver === 'undefined') return
     const observer = new ResizeObserver(() => setWidth(el.clientWidth))
     observer.observe(el)
     return () => observer.disconnect()
