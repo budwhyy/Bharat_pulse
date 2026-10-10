@@ -100,9 +100,17 @@ export const KPI_ORDER: readonly KpiId[] = ['gdp', 'cpi', 'repo', 'unemployment'
 
 export type Unit = 'percent' | 'billion-transactions' | 'billion-people'
 
+/** A reference point shown beside the headline value (previous period, target, a component). */
+export interface Comparison {
+  label: Localized
+  value: number
+  kind: 'previous' | 'target' | 'component'
+}
+
 export interface Kpi {
   id: KpiId
   value: number | null
+  comparisons: Comparison[]
   unit: Unit
   decimals: number
   period: Localized

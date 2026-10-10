@@ -9,6 +9,7 @@
  */
 import type {
   Cadence,
+  Comparison,
   KpiId,
   Localized,
   ReleaseDate,
@@ -58,8 +59,13 @@ export interface KpiRecord {
   decimals: number
   period: Localized
   note: Localized | null
+  comparisons: Comparison[]
   meta: RecordMeta
 }
+
+const prev = (en: string, hi: string, value: number): Comparison => ({ label: { en, hi }, value, kind: 'previous' })
+const target = (en: string, hi: string, value: number): Comparison => ({ label: { en, hi }, value, kind: 'target' })
+const part = (en: string, hi: string, value: number): Comparison => ({ label: { en, hi }, value, kind: 'component' })
 
 const GDP_META: RecordMeta = {
   cadence: 'quarterly',
@@ -100,6 +106,7 @@ export const KPI_RECORDS: Record<KpiId, KpiRecord> = {
     decimals: 1,
     period: { en: 'Apr–Jun 2026 (Q1 FY27)', hi: 'अप्रैल–जून 2026 (Q1 FY27)' },
     note: { en: 'vs 6.9% a year earlier · first estimate', hi: 'एक साल पहले 6.9% · पहला अनुमान' },
+    comparisons: [prev('Apr–Jun 2025', 'अप्रैल–जून 2025', 6.9), prev('Jan–Mar 2026', 'जनवरी–मार्च 2026', 8.6)],
     meta: GDP_META,
   },
   cpi: {
@@ -109,6 +116,7 @@ export const KPI_RECORDS: Record<KpiId, KpiRecord> = {
     decimals: 2,
     period: { en: 'Aug 2026', hi: 'अगस्त 2026' },
     note: { en: 'Highest in 8 months · RBI target 4%', hi: '8 महीनों में सबसे ऊँची · आरबीआई लक्ष्य 4%' },
+    comparisons: [prev('Jul 2026', 'जुलाई 2026', 4.45), target('RBI target', 'आरबीआई लक्ष्य', 4)],
     meta: CPI_META,
   },
   repo: {
@@ -118,6 +126,7 @@ export const KPI_RECORDS: Record<KpiId, KpiRecord> = {
     decimals: 2,
     period: { en: 'Effective 7 Oct 2026', hi: '7 अक्टूबर 2026 से लागू' },
     note: { en: '+25 bp, first hike since 2023', hi: '+25 आधार अंक, 2023 के बाद पहली बढ़ोतरी' },
+    comparisons: [prev('Before 7 Oct', '7 अक्टूबर से पहले', 5.25)],
     meta: { cadence: 'policy', source: CITATIONS.rbi, releasedAt: { date: '2026-10-07', precision: 'day' }, nextReleaseDue: null },
   },
   unemployment: {
@@ -127,6 +136,7 @@ export const KPI_RECORDS: Record<KpiId, KpiRecord> = {
     decimals: 1,
     period: { en: 'Aug 2026 · age 15+', hi: 'अगस्त 2026 · 15+ आयु' },
     note: { en: 'Urban 6.8% · rural 4.1%', hi: 'शहरी 6.8% · ग्रामीण 4.1%' },
+    comparisons: [part('Urban', 'शहरी', 6.8), part('Rural', 'ग्रामीण', 4.1)],
     meta: PLFS_META,
   },
   upi: {
@@ -136,6 +146,7 @@ export const KPI_RECORDS: Record<KpiId, KpiRecord> = {
     decimals: 2,
     period: { en: 'Sep 2026', hi: 'सितंबर 2026' },
     note: { en: '+23% y/y · ₹29.37 lakh crore', hi: 'सालाना +23% · ₹29.37 लाख करोड़' },
+    comparisons: [prev('Aug 2026', 'अगस्त 2026', 24.51), prev('Jul 2026', 'जुलाई 2026', 23.66)],
     meta: UPI_META,
   },
   population: {
@@ -145,6 +156,7 @@ export const KPI_RECORDS: Record<KpiId, KpiRecord> = {
     decimals: 2,
     period: { en: '2025 · UN estimate', hi: '2025 · संयुक्त राष्ट्र अनुमान' },
     note: { en: 'Fertility 1.9, below replacement', hi: 'प्रजनन दर 1.9, प्रतिस्थापन स्तर से नीचे' },
+    comparisons: [prev('2024', '2024', 1.45)],
     meta: POPULATION_META,
   },
   flfpr: {
@@ -154,6 +166,7 @@ export const KPI_RECORDS: Record<KpiId, KpiRecord> = {
     decimals: 1,
     period: { en: 'Aug 2026 · women 15+', hi: 'अगस्त 2026 · 15+ आयु की महिलाएँ' },
     note: { en: 'Up from 33.7% a year earlier', hi: 'एक साल पहले 33.7% से बढ़कर' },
+    comparisons: [prev('Aug 2025', 'अगस्त 2025', 33.7)],
     meta: PLFS_META,
   },
   wpi: {
@@ -163,6 +176,7 @@ export const KPI_RECORDS: Record<KpiId, KpiRecord> = {
     decimals: 2,
     period: { en: 'Aug 2026', hi: 'अगस्त 2026' },
     note: { en: 'Food, fuel and manufactured goods', hi: 'खाद्य, ईंधन और विनिर्मित वस्तुएँ' },
+    comparisons: [prev('CPI, same month', 'सीपीआई, उसी महीने', 4.82)],
     meta: {
       cadence: 'monthly',
       source: CITATIONS.wpi,

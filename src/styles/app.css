@@ -1460,6 +1460,103 @@ th.n {
   font-size: 12px;
 }
 
+/* 3D KPI pillars ----------------------------------------------------------- */
+.pillars {
+  position: relative;
+  height: 108px;
+  margin: 2px 0;
+  perspective: 500px;
+  perspective-origin: 50% 0;
+  border-radius: var(--radius-sm);
+  cursor: grab;
+  touch-action: pan-x;
+  user-select: none;
+}
+
+.pillars:active {
+  cursor: grabbing;
+}
+
+.pillars-plane {
+  position: absolute;
+  inset: 0 0 20px;
+  transform-origin: 50% 80%;
+  transform-style: preserve-3d;
+  transition: transform 0.2s var(--ease);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pillars-plane {
+    animation: hemi-in 0.7s var(--ease) backwards;
+  }
+}
+
+.pillars-plane svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.pillars-floor {
+  fill: var(--surface-2);
+}
+
+.pillar-face {
+  stroke: var(--surface);
+  stroke-width: 0.5;
+}
+
+.pillars-target {
+  stroke: var(--ink-2);
+  stroke-width: 0.8;
+  stroke-dasharray: 2 1.5;
+}
+
+.pillars-target-label {
+  fill: var(--ink-2);
+  font-size: 8px;
+  font-weight: 600;
+}
+
+.pillars-labels {
+  position: absolute;
+  inset: auto 0 0;
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+.pillars-labels li {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pillars-labels .is-now {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.pillars-tip {
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  color: var(--ink-2);
+  pointer-events: none;
+}
+
+.pillars-tip strong {
+  color: var(--ink);
+}
+
 /* 3D hemicycle ------------------------------------------------------------- */
 .hemi {
   display: flex;

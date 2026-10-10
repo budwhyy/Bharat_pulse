@@ -2,6 +2,7 @@ import { KPI_ORDER, type Kpi, type KpiId, type Unit } from '../../domain/types'
 import { useI18n } from '../../i18n/i18n'
 import { checkedText, releasedText } from '../charts/ChartCard'
 import { DataFlags, ExternalLink, ProvenanceTag } from '../common/ui'
+import { KpiPillars } from './KpiPillars'
 
 function unitText(unit: Unit, t: ReturnType<typeof useI18n>['t']): string {
   if (unit === 'percent') return '%'
@@ -30,6 +31,7 @@ function KpiTile({ kpi }: { kpi: Kpi }) {
         )}
       </p>
       {kpi.note && <p className="kpi-note">{pick(kpi.note)}</p>}
+      <KpiPillars kpi={kpi} format={(v) => `${num(v, kpi.decimals)}${kpi.unit === 'percent' ? '%' : ''}`} />
       <p className="kpi-period">
         {pick(kpi.period)} · {t(`cadence.${kpi.meta.cadence}`)}
       </p>

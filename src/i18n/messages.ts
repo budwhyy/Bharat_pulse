@@ -87,6 +87,8 @@ const en = {
   'kpi.overdue': 'Newer release likely out',
   'kpi.overdueHint': 'A newer official release was due around {date}; this record is not auto-updated.',
   'kpi.unavailable': 'Unavailable',
+  'kpi.pillars.now': 'Now',
+  'kpi.pillars.keys': 'Drag or use the up and down arrow keys to tilt.',
   'kpi.unit.bnTransactions': 'bn',
   'kpi.unit.bnPeople': 'bn',
 
@@ -377,6 +379,8 @@ const hi: Record<MessageKey, string> = {
   'kpi.overdue': 'नई रिलीज़ संभवतः आ चुकी',
   'kpi.overdueHint': 'नई आधिकारिक रिलीज़ लगभग {date} तक अपेक्षित थी; यह रिकॉर्ड अपने-आप अपडेट नहीं होता।',
   'kpi.unavailable': 'अनुपलब्ध',
+  'kpi.pillars.now': 'अब',
+  'kpi.pillars.keys': 'झुकाने के लिए खींचें या ऊपर-नीचे तीर कुंजियों का उपयोग करें।',
   'kpi.unit.bnTransactions': 'अरब',
   'kpi.unit.bnPeople': 'अरब',
 

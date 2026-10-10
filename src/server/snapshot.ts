@@ -90,6 +90,11 @@ function buildRepo(data: CacheData, health: Health): Kpi {
       : live.previous != null
         ? { en: `Changed from ${live.previous.toFixed(2)}%`, hi: `${live.previous.toFixed(2)}% से बदली` }
         : null,
+    comparisons: unchanged
+      ? baseline.comparisons
+      : live.previous != null
+        ? [{ label: { en: 'Previous', hi: 'पिछली' }, value: live.previous, kind: 'previous' }]
+        : [],
     meta: {
       provenance: 'official-live',
       cadence: 'policy',
@@ -109,9 +114,11 @@ function buildPopulation(data: CacheData, health: Health): Kpi {
   const latest = series?.points.at(-1)
   if (!series || !latest) return recordKpi(baseline)
   const fertility = data.worldBank.fertility?.points.at(-1)
+  const prior = series.points.at(-2)
   return {
     ...baseline,
     value: latest.value / 1e9,
+    comparisons: prior ? [{ label: { en: prior.year, hi: prior.year }, value: prior.value / 1e9, kind: 'previous' }] : [],
     period: { en: `${latest.year} · World Bank estimate`, hi: `${latest.year} · विश्व बैंक अनुमान` },
     note: fertility
       ? {
