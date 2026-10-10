@@ -959,6 +959,158 @@ button {
   gap: 6px;
 }
 
+/* Live axis above the feed */
+.live-feed {
+  overflow: hidden;
+}
+
+.live-axis {
+  padding: 34px 20px 14px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(to right, transparent, color-mix(in srgb, var(--accent) 7%, transparent));
+}
+
+.live-axis-track {
+  position: relative;
+  height: 2px;
+  background: var(--line-strong);
+  border-radius: 2px;
+}
+
+.live-tick {
+  position: absolute;
+  top: -4px;
+  width: 1px;
+  height: 10px;
+  background: var(--line-strong);
+}
+
+.live-tick span {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  transform: translateX(-50%);
+  font-size: 10.5px;
+  color: var(--ink-3);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.live-node {
+  position: absolute;
+  top: -11px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-left: -12px;
+  border-radius: 50%;
+  border: 2px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-2);
+  transition: left 1s linear;
+}
+
+.live-node svg {
+  width: 12px;
+  height: 12px;
+}
+
+.live-node.is-official {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.live-now {
+  position: absolute;
+  right: 0;
+  top: -5px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.live-now-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--good);
+  box-shadow: 0 0 0 4px var(--good-soft);
+}
+
+.live-now-label {
+  position: absolute;
+  top: -26px;
+  right: 0;
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--ink-2);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .live-now-dot {
+    animation: live-pulse 1.6s ease-out infinite;
+  }
+
+  .live-node.is-new {
+    animation: node-pop 0.6s var(--ease) both;
+  }
+
+  .update.is-new {
+    animation: update-drop 0.7s var(--ease) both;
+  }
+}
+
+@keyframes live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--good) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 12px transparent;
+  }
+}
+
+@keyframes node-pop {
+  from {
+    transform: scale(0.2);
+  }
+  60% {
+    transform: scale(1.35);
+  }
+}
+
+@keyframes update-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-18px);
+    background: var(--accent-soft);
+  }
+  to {
+    background: transparent;
+  }
+}
+
+.update.is-new {
+  background: var(--accent-soft);
+  transition: background 2s ease 3s;
+}
+
+@media (max-width: 767px) {
+  .live-axis {
+    padding: 34px 14px 14px;
+  }
+
+  .live-tick span {
+    display: none;
+  }
+
+  .live-tick:nth-child(3n + 1) span {
+    display: block;
+  }
+}
+
 /* ==========================================================================
    KPI strip
    ========================================================================== */

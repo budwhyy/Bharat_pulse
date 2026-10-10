@@ -16,8 +16,10 @@ import type { Category, UpdateView } from '../../domain/types'
 import { useI18n } from '../../i18n/i18n'
 import { useNow } from '../common/hooks'
 import { EmptyState, ReportedIcon } from '../common/ui'
+import { LiveAxis } from './LiveAxis'
+import { useEffect, useRef, useState } from 'react'
 
-const CATEGORY_ICON: Record<Category, typeof Landmark> = {
+export const CATEGORY_ICON: Record<Category, typeof Landmark> = {
   politics: Landmark,
   economy: TrendingUp,
   policy: Building2,
@@ -52,14 +54,14 @@ function KindTag({ kind }: { kind: UpdateView['kind'] }) {
   )
 }
 
-function UpdateItem({ item }: { item: UpdateView }) {
+function UpdateItem({ item, isNew }: { item: UpdateView; isNew: boolean }) {
   const { t, pick, time, dateTime, age } = useI18n()
   const now = useNow()
   const at = item.timeBasis === 'published' && item.publishedAt ? item.publishedAt : item.firstSeenAt
   const source = pick(item.sourceName)
   const old = item.timeBasis !== 'unknown' && ageTier(at, now) === 'older'
   return (
-    <li className={`update ${item.kind === 'official' ? 'is-official' : ''}`}>
+    <li className={`update ${item.kind === 'official' ? 'is-official' : ''} ${isNew ? 'is-new' : ''}`}>
       <div className="update-meta">
         <CategoryTag category={item.category} />
         <KindTag kind={item.kind} />
@@ -146,6 +148,22 @@ export function LatestUpdates({
   onRefresh: () => void
 }) {
   const { t } = useI18n()
+  // Items that arrived after first render pop out of the axis; the flag clears after the animation.
+  const seen = useRef<Set<string> | null>(null)
+  const [newIds, setNewIds] = useState<ReadonlySet<string>>(new Set())
+  useEffect(() => {
+    const ids = items.map((i) => i.id)
+    if (seen.current === null) {
+      seen.current = new Set(ids)
+      return
+    }
+    const fresh = ids.filter((id) => !seen.current!.has(id))
+    for (const id of ids) seen.current.add(id)
+    if (fresh.length === 0) return
+    setNewIds(new Set(fresh))
+    const timer = setTimeout(() => setNewIds(new Set()), 6000)
+    return () => clearTimeout(timer)
+  }, [items])
   return (
     <section className="panel" aria-labelledby="updates-heading" aria-busy={refreshing && items.length === 0}>
       <div className="panel-head">
@@ -169,11 +187,14 @@ export function LatestUpdates({
           </div>
         )
       ) : (
-        <ol className="card updates">
-          {items.map((item) => (
-            <UpdateItem key={item.id} item={item} />
-          ))}
-        </ol>
+        <div className="card live-feed">
+          <LiveAxis items={items} newIds={newIds} />
+          <ol className="updates">
+            {items.map((item) => (
+              <UpdateItem key={item.id} item={item} isNew={newIds.has(item.id)} />
+            ))}
+          </ol>
+        </div>
       )}
     </section>
   )
