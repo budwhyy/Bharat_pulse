@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { HeadContent, Link, Outlet, Scripts, createRootRouteWithContext } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import { PreferencesProvider } from '../preferences/PreferencesProvider'
 import { THEME_BOOT_SCRIPT } from '../preferences/storage'
 import appCss from '../styles/app.css?url'
@@ -10,10 +11,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
       { name: 'color-scheme', content: 'light dark' },
+      { name: 'apple-mobile-web-app-capable', content: 'yes' },
+      { name: 'apple-mobile-web-app-title', content: 'Bharat Pulse' },
     ],
     links: [
       { rel: 'stylesheet', href: appCss },
       { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
+      { rel: 'manifest', href: '/manifest.webmanifest' },
+      { rel: 'apple-touch-icon', href: '/icons/apple-touch-icon.png' },
     ],
     scripts: [{ children: THEME_BOOT_SCRIPT }],
   }),
@@ -22,6 +27,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 })
 
 function RootComponent() {
+  // Production only: in dev the service worker would cache Vite's module graph.
+  useEffect(() => {
+    if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {})
+    }
+  }, [])
   return (
     // The boot script may set data-theme before hydration; React does not own that attribute.
     <html lang="en" suppressHydrationWarning>

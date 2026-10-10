@@ -24,7 +24,7 @@ if not exist dist\server\server.js (
 
 echo Starting Bharat Pulse on http://127.0.0.1:3000  ^(close this window to stop^)
 start "" http://127.0.0.1:3000
-node server.mjs
+node serve.mjs
 goto :eof
 
 :fail

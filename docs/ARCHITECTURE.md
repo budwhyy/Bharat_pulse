@@ -82,7 +82,7 @@ src/
   components/    common (tags, tabs, tables), charts (cards, Recharts plots — lazy-loaded),
                  kpi, updates, timeline, politics, economy, risks, settings, layout, sections.
   routes/        __root (document, head, theme boot script), index (the dashboard at `/`).
-server.mjs       Dependency-free Node production server for dist/.
+serve.mjs       Dependency-free Node production server for dist/.
 ```
 
 ## Provenance labels

@@ -23,6 +23,7 @@ const TYPES = {
   '.ico': 'image/x-icon',
   '.json': 'application/json',
   '.txt': 'text/plain; charset=utf-8',
+  '.webmanifest': 'application/manifest+json',
 }
 
 const SECURITY_HEADERS = {
@@ -47,7 +48,11 @@ async function serveStatic(req, res, pathname) {
       ...SECURITY_HEADERS,
       'content-type': TYPES[extname(file)] ?? 'application/octet-stream',
       'content-length': info.size,
-      'cache-control': pathname.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'public, max-age=3600',
+      'cache-control': pathname.startsWith('/assets/')
+        ? 'public, max-age=31536000, immutable'
+        : pathname === '/sw.js'
+          ? 'no-cache'
+          : 'public, max-age=3600',
     })
     if (req.method === 'HEAD') res.end()
     else createReadStream(file).pipe(res)

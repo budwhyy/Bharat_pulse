@@ -8,7 +8,11 @@ let service: DashboardService | null = null
 /** One service per server process; the cache directory can be moved with BHARAT_PULSE_CACHE_DIR. */
 export function getDashboardService(): DashboardService {
   service ??= new DashboardService({
-    store: fileStore(process.env.BHARAT_PULSE_CACHE_DIR ?? join(process.cwd(), 'data', 'cache')),
+    // Vercel functions can only write to /tmp, which lasts as long as a warm instance.
+    store: fileStore(
+      process.env.BHARAT_PULSE_CACHE_DIR ??
+        (process.env.VERCEL ? join('/tmp', 'bharat-pulse') : join(process.cwd(), 'data', 'cache')),
+    ),
     fetcher: httpFetcher,
     log: (message) => console.warn(`[sources] ${message}`),
   })
