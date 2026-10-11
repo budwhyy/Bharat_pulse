@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MethodologyRouteImport } from './routes/methodology'
 import { Route as ApiScanRouteImport } from './routes/api/scan'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MethodologyRoute = MethodologyRouteImport.update({
+  id: '/methodology',
+  path: '/methodology',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiScanRoute = ApiScanRouteImport.update({
@@ -25,27 +31,31 @@ const ApiScanRoute = ApiScanRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/methodology': typeof MethodologyRoute
   '/api/scan': typeof ApiScanRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/methodology': typeof MethodologyRoute
   '/api/scan': typeof ApiScanRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/methodology': typeof MethodologyRoute
   '/api/scan': typeof ApiScanRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/scan'
+  fullPaths: '/' | '/methodology' | '/api/scan'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/scan'
-  id: '__root__' | '/' | '/api/scan'
+  to: '/' | '/methodology' | '/api/scan'
+  id: '__root__' | '/' | '/methodology' | '/api/scan'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MethodologyRoute: typeof MethodologyRoute
   ApiScanRoute: typeof ApiScanRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/methodology': {
+      id: '/methodology'
+      path: '/methodology'
+      fullPath: '/methodology'
+      preLoaderRoute: typeof MethodologyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/scan': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MethodologyRoute: MethodologyRoute,
   ApiScanRoute: ApiScanRoute,
 }
 export const routeTree = rootRouteImport

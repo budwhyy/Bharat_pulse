@@ -29,6 +29,8 @@ export interface UpdateRecord {
   title: string
   /** Publisher-provided teaser, stripped and clamped. Never full article text. */
   summary: string | null
+  /** Feed byline, retained only to detect explicit wire-agency attribution. */
+  author?: string | null
   /** Link to the original report. */
   url: string
   category: Category
@@ -63,7 +65,7 @@ export interface SourceState {
 // ---------------------------------------------------------------------------
 // Indicators
 
-export type Cadence = 'monthly' | 'quarterly' | 'annual' | 'policy'
+export type Cadence = 'hourly' | 'daily' | 'monthly' | 'quarterly' | 'annual' | 'policy'
 
 /**
  * official-live: fetched from an official Indian source on a schedule.
@@ -199,6 +201,78 @@ export interface UpdateView extends UpdateRecord {
   languageFallback: boolean
 }
 
+/** INR per USD, FBIL's daily reference rate (not a live market price). */
+export interface FxView {
+  pair: string
+  value: number
+  /** Business day the rate applies to (YYYY-MM-DD). */
+  date: string
+  /** Time of day FBIL publishes it, e.g. "1:00 pm". */
+  displayTime: string | null
+  previous: number | null
+  series: { date: string; value: number }[]
+  meta: DataMeta
+}
+
+/** An official severe-weather or disaster warning (NDMA SACHET). Shown as a warning, never as a headline. */
+export interface AlertView {
+  id: string
+  title: string
+  category: string
+  authority: string
+  at: string
+  states: string[]
+  url: string
+  stale?: boolean
+}
+
+export interface AqiCity {
+  city: string
+  aqi: number
+  band: 'good' | 'satisfactory' | 'moderate' | 'poor' | 'very-poor' | 'severe'
+  at: string
+  stations: number
+}
+
+export interface AqiView {
+  /** Only enabled after both credentials and pollutant units are verified. */
+  enabled: boolean
+  unavailableReason?: 'needs-key' | 'needs-verification'
+  cities: AqiCity[]
+  meta: DataMeta | null
+}
+
+export interface ClusterView {
+  id: string
+  lang: Lang
+  headline: string
+  summary: string | null
+  category: Category
+  firstReportedAt: string
+  latestAt: string
+  outlets: {
+    sourceId: string
+    name: Localized
+    kind: UpdateKind
+    title: string
+    url: string
+    at: string
+    group: number
+  }[]
+  independent: number
+  verification: 'official' | 'multi' | 'single' | 'opinion'
+  states: string[]
+  stale: boolean
+}
+
+export interface PulseView {
+  clusters: Record<Lang, ClusterView[]>
+  /** Story count per state code, last 3 hours (per language). */
+  stateCounts: Record<Lang, Record<string, number>>
+  /** First-report times (ms) of every cluster in the last 24 h, for "since you last looked". */
+  clusterTimes: Record<Lang, number[]>
+}
+
 export interface DashboardSnapshot {
   generatedAt: string
   refreshing: boolean
@@ -207,4 +281,8 @@ export interface DashboardSnapshot {
   kpis: Record<KpiId, Kpi>
   datasets: Datasets
   discovery: DiscoveryView
+  pulse: PulseView
+  fx: FxView | null
+  alerts: AlertView[]
+  aqi: AqiView
 }

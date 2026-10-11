@@ -16,8 +16,10 @@
 - **The browser never contacts a source.** All fetching happens in `src/server/*` behind two server
   functions (`src/server/dashboard.functions.ts`). The client bundle contains RPC stubs only; a build
   check confirmed no adapter, parser, source URL or cache code reaches `dist/client`.
-- **No credentials exist.** Every source is public and keyless. CPCB / data.gov.in adapters are not
-  built because no key was supplied; a future key would live in a server env var only.
+- **Credentials stay server-only.** Normal sources are public and keyless. CPCB is implemented but
+  gated on both `DATA_GOV_IN_API_KEY` and `CPCB_CONCENTRATION_VERIFIED=true`. The latter must not be
+  set until first-party field-unit and averaging-period verification is complete (owner decision,
+  11 Oct 2026). Key alone does not register the source. Neither setting reaches the snapshot.
 - **Outbound fetches are allowlisted** (`ALLOWED_HOSTS` in `src/server/sources.ts`), HTTPS-only,
   12 s timeout, 4 MB cap, conditional requests (ETag / Last-Modified), manual redirects so PIB's
   session cookie can be carried.
@@ -29,6 +31,9 @@
 | News feeds | every 10 min | 30 min without success | Failures back off 15 → 30 → 60 min |
 | RBI policy rates | every 6 h | 18 h | Decision date reused only while the value matches the cited MPC decision |
 | World Bank series | daily | 3 days | `lastupdated` from the API is shown as "data released" |
+| FBIL reference rate | daily | 3 missed checks / observation > 5 days | Always shows the business-day date; weekend is not a new quote |
+| NDMA SACHET | 15 min | 45 min without success | Severe keyword filter; retain 48 h, display 24 h; pin under 6 h |
+| CPCB AQI (gated) | hourly | 3 h without success / observation > 3 h | Reject incomplete city responses, invalid stations, future or >24 h readings |
 | Release records | not fetched | — | Flagged "newer release likely out" 2 days after `nextReleaseDue` |
 
 Reads are stale-while-revalidate: a snapshot request returns the cache immediately and starts a
@@ -65,6 +70,37 @@ them on a first fetch, the 10 newest undated ones per routine refresh, 3 at a ti
 
 Categories come from deterministic keyword rules (`src/domain/categorize.ts`, English and Hindi)
 plus a weak per-source prior. Daily digests / generic live blogs are dropped.
+
+## Live Pulse
+
+`buildSnapshot` drops roundups and records from removed sources before clustering. Dated / bounded
+first-seen records in the last 24 hours are clustered within each language by deterministic token
+overlap. Unknown-time backlogs and future records are excluded. The publisher registry unifies
+fixed and discovered feeds so one publisher cannot inflate outlet coverage. Near-identical headlines
+or detected shared wire attribution (including feed bylines) count as one estimated reporting group.
+The earliest retained headline is quoted without rewriting. This is a heuristic, not fact-checking.
+
+Score = `0.5^(hours since latest report / 6) * ln(1 + reportingGroups) * languageSpread`.
+Language spread is 1; official clusters above score 0.35 are pinned before the score order.
+The UI receives the top 30 per language plus all 24-hour cluster first-report times for visit deltas.
+Map counts use clusters with a report in the last three hours and deterministic EN/HI state/city
+matching. No geographic boundaries or political colours are drawn. Tile buttons have ≥24px targets
+at 375px; the equivalent state dropdown is ≥44px. It filters both clusters and the five-update list.
+Severe alerts are separate from headline clusters and expand from a pinned official-alert disclosure
+beside the map. Source failures keep cached values with stale/error labels.
+
+FBIL is requested with ISO dates and displayed as a daily reference, with the previous returned
+business day and up to 22 observations. CPCB's **unverified concentration contract** is fixture-tested:
+station AQI needs three valid pollutants including PM2.5 or PM10, the worst sub-index wins, and the
+city tile is a derived station mean. Observations from different timestamps are never mixed within
+a station. Concentration bands are rounded to published precision, linearly interpolated and capped
+at 500 using the handoff's finite severe-band endpoints. The source's units and averaging periods
+must be verified before activation. Partial city failure retains previous values and labels the source
+as error. API-key-bearing errors are never copied to public state.
+
+The local JSON cache remains version 1: missing `fx`, `alerts` and `aqi` arrays load as empty defaults.
+Only a localStorage timestamp records the last visit; no analytics, thumbnails, GDELT or
+cross-language clustering. Counts since older visits are explicitly limited to the available 24 hours.
 
 ## Source discovery
 

@@ -169,6 +169,7 @@ export function SiteFooter({ onOpenSources }: { onOpenSources: () => void }) {
       <button type="button" className="btn" onClick={onOpenSources}>
         {t('footer.sources')}
       </button>
+      <Link to="/methodology" className="btn">{t('method.title')}</Link>
     </footer>
   )
 }

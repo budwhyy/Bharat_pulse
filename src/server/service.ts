@@ -5,6 +5,7 @@ import { assertFeedLanguage, normalizeFeedItems } from './adapters/news'
 import { parsePibRelease } from './adapters/pib'
 import { parseRbiRates } from './adapters/rbi'
 import { parseFeed } from './adapters/rss'
+import { AQI_CITIES, cpcbUrl, fbilUrl, parseCpcb, parseFbil, parseSachet } from './adapters/indicators'
 import { WB_SERIES, parseWorldBank, worldBankUrl, type WbSeriesKey } from './adapters/worldbank'
 import { emptyDiscovery, type CacheData, type CacheStore } from './cache'
 import {
@@ -18,7 +19,7 @@ import {
 import type { Fetcher } from './http'
 import { PUBLISHERS, type Publisher } from './publishers'
 import { buildSnapshot } from './snapshot'
-import { SOURCES, type IndicatorSource, type NewsSource, type SourceDef } from './sources'
+import { configuredSources, type IndicatorSource, type NewsSource, type SourceDef } from './sources'
 import { sortTime } from '../domain/select'
 
 export interface ServiceOptions {
@@ -35,6 +36,9 @@ export interface ServiceOptions {
   /** Publishers the discovery scanner may explore. Defaults to none when custom sources are injected. */
   publishers?: Publisher[]
   log?: (message: string) => void
+  dataGovInApiKey?: string
+  /** Owner must verify pollutant_avg means concentration before enabling this adapter. */
+  cpcbConcentrationVerified?: boolean
 }
 
 export interface DiscoverySummary {
@@ -98,7 +102,7 @@ export class DashboardService {
   private readonly now: () => Date
 
   constructor(private readonly options: ServiceOptions) {
-    this.sources = options.sources ?? SOURCES
+    this.sources = options.sources ?? configuredSources(Boolean(options.dataGovInApiKey) && options.cpcbConcentrationVerified === true)
     this.publishers = options.publishers ?? (options.sources ? [] : PUBLISHERS)
     this.now = options.now ?? (() => new Date())
   }
@@ -209,7 +213,7 @@ export class DashboardService {
       running: this.discovering !== null,
       enabled: this.publishers.length > 0,
       intervalMinutes: DISCOVERY_INTERVAL_MINUTES,
-    })
+    }, this.options.dataGovInApiKey ? 'needs-verification' : 'needs-key')
   }
 
   async snapshot(): Promise<DashboardSnapshot> {
@@ -331,6 +335,32 @@ export class DashboardService {
 
   private async refreshIndicator(source: IndicatorSource): Promise<Partial<SourceState>> {
     const nowIso = this.now().toISOString()
+    if (source.adapter === 'fbil-rates') {
+      const response = await this.options.fetcher(fbilUrl(this.now()))
+      this.data!.fx = parseFbil(response.text, this.now())
+      return { itemCount: this.data!.fx.length }
+    }
+    if (source.adapter === 'ndma-sachet') {
+      const response = await this.options.fetcher(source.url)
+      this.data!.alerts = parseSachet(response.text, this.now())
+      return { itemCount: this.data!.alerts.length }
+    }
+    if (source.adapter === 'cpcb-aqi') {
+      if (!this.options.cpcbConcentrationVerified) throw new Error('CPCB pollutant units need verification')
+      const key = this.options.dataGovInApiKey
+      if (!key) throw new Error('CPCB needs a server API key')
+      const results = await Promise.allSettled(AQI_CITIES.map(async (city) => {
+        const response = await this.options.fetcher(cpcbUrl(key, city))
+        return parseCpcb(response.text, city, this.now())
+      }))
+      results.forEach((result) => {
+        if (result.status === 'fulfilled') this.data!.aqi = [...this.data!.aqi.filter((c) => c.city !== result.value.city), result.value]
+      })
+      const failed = results.filter((r) => r.status === 'rejected').length
+      // Transport errors may contain the API-key URL; never expose them.
+      if (failed) throw new Error(`${failed} of ${AQI_CITIES.length} CPCB cities unavailable`)
+      return { itemCount: this.data!.aqi.length }
+    }
     if (source.adapter === 'rbi-rates') {
       const response = await this.options.fetcher(source.url)
       const rates = parseRbiRates(response.text)

@@ -11,6 +11,7 @@ import { useI18n } from '../i18n/i18n'
 import { usePreferences } from '../preferences/PreferencesProvider'
 import { dashboardQuery } from '../queries/dashboard'
 import { refreshDashboard } from '../server/dashboard.functions'
+import { useLastVisit } from '../components/pulse/LivePulse'
 
 const DESCRIPTION =
   'A public, near-real-time dashboard of India: the five newest balanced national updates from official and reported sources, ' +
@@ -53,6 +54,7 @@ function DashboardPage() {
   const now = useTickingNow(snapshot.generatedAt)
   const settings = useRef<SettingsHandle>(null)
   const [announcement, setAnnouncement] = useState('')
+  const previousVisit = useLastVisit()
 
   const refresh = useMutation({
     mutationFn: () => refreshDashboard(),
@@ -109,11 +111,11 @@ function DashboardPage() {
         dialog={<SettingsDialog ref={settings} sources={snapshot.sources} discovery={snapshot.discovery} />}
       >
         <div className="section-view" key={section}>
-          <div className="section-head">
+          <div className={section === 'overview' ? 'sr-only' : 'section-head'}>
             <h1 ref={heading} tabIndex={-1}>
               {t(`section.${section}.title`)}
             </h1>
-            <p>{t(`section.${section}.intro`)}</p>
+            {section !== 'overview' && <p>{t(`section.${section}.intro`)}</p>}
           </div>
 
           {query.isRefetchError && (
@@ -123,7 +125,7 @@ function DashboardPage() {
             </div>
           )}
 
-          {issues.length > 0 && (section === 'overview' || issues.some((s) => s.type === 'indicator')) && (
+          {issues.length > 0 && section !== 'overview' && issues.some((s) => s.type === 'indicator') && (
             <div className="alert alert-warn">
               <CircleAlert aria-hidden="true" />
               <div>
@@ -138,7 +140,7 @@ function DashboardPage() {
             </div>
           )}
 
-          <SectionContent section={section} snapshot={snapshot} lang={lang} onRefresh={() => refresh.mutate()} />
+          <SectionContent section={section} snapshot={snapshot} lang={lang} onRefresh={() => refresh.mutate()} onOpenSources={openSources} previousVisit={previousVisit} />
         </div>
       </AppShell>
     </NowContext.Provider>

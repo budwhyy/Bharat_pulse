@@ -14,6 +14,8 @@ export function getDashboardService(): DashboardService {
         (process.env.VERCEL ? join('/tmp', 'bharat-pulse') : join(process.cwd(), 'data', 'cache')),
     ),
     fetcher: httpFetcher,
+    dataGovInApiKey: process.env.DATA_GOV_IN_API_KEY,
+    cpcbConcentrationVerified: process.env.CPCB_CONCENTRATION_VERIFIED === 'true',
     log: (message) => console.warn(`[sources] ${message}`),
   })
   return service

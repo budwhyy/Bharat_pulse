@@ -31,7 +31,7 @@ export interface NewsSource extends BaseSource {
 
 export interface IndicatorSource extends BaseSource {
   type: 'indicator'
-  adapter: 'rbi-rates' | 'world-bank'
+  adapter: 'rbi-rates' | 'world-bank' | 'fbil-rates' | 'ndma-sachet' | 'cpcb-aqi'
   url: string
 }
 
@@ -315,6 +315,9 @@ export const SOURCES: SourceDef[] = [
 
 /** Hosts the server may contact, including redirect targets and discovery seeds. */
 export const ALLOWED_HOSTS = [
+  'fbil.org.in',
+  'sachet.ndma.gov.in',
+  'api.data.gov.in',
   'pib.gov.in',
   'rbi.org.in',
   'sebi.gov.in',
@@ -338,3 +341,14 @@ export const ALLOWED_HOSTS = [
   'india.com',
   'worldbank.org',
 ]
+
+export const PULSE_SOURCES: IndicatorSource[] = [
+  { id: 'fbil-rates', type: 'indicator', adapter: 'fbil-rates', kind: 'official', lang: 'en', name: { en: 'FBIL reference rate', hi: 'एफबीआईएल संदर्भ दर' }, homepage: 'https://www.fbil.org.in/', url: 'https://www.fbil.org.in/wasdm/refrates/fetchfiltered', refreshMinutes: 24 * 60 },
+  { id: 'ndma-sachet', type: 'indicator', adapter: 'ndma-sachet', kind: 'official', lang: 'en', name: { en: 'NDMA SACHET alerts', hi: 'एनडीएमए सचेत चेतावनियाँ' }, homepage: 'https://sachet.ndma.gov.in/', url: 'https://sachet.ndma.gov.in/cap_public_website/rss/rss_india.xml', refreshMinutes: 15 },
+  { id: 'cpcb-aqi', type: 'indicator', adapter: 'cpcb-aqi', kind: 'official', lang: 'en', name: { en: 'CPCB air quality', hi: 'सीपीसीबी वायु गुणवत्ता' }, homepage: 'https://www.data.gov.in/resource/real-time-air-quality-index-various-locations', url: 'https://api.data.gov.in/resource/3b01bcb8-0b14-4abf-b6f2-c1bfd384ba69', refreshMinutes: 60 },
+]
+
+/** Called on the server only. Keys never enter source definitions or snapshots. */
+export function configuredSources(aqiEnabled: boolean): SourceDef[] {
+  return [...SOURCES, ...PULSE_SOURCES.filter((s) => s.adapter !== 'cpcb-aqi' || aqiEnabled)]
+}

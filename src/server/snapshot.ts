@@ -15,6 +15,8 @@ import {
 import { isRoundup } from '../domain/categorize'
 import { sourceHealth } from '../domain/freshness'
 import { selectLatest } from '../domain/select'
+import { clusterStories, rankClusters } from '../domain/stories'
+import { PUBLISHERS, matchesPublisher } from './publishers'
 import {
   KPI_ORDER,
   LANGS,
@@ -192,6 +194,7 @@ export function buildSnapshot(
     enabled: false,
     intervalMinutes: 60,
   },
+  aqiUnavailableReason: 'needs-key' | 'needs-verification' = 'needs-key',
 ): DashboardSnapshot {
   const health = new Map<string, Health>(
     sources.map((s) => [s.id, sourceHealth(data.sources[s.id], s.refreshMinutes, now)]),
@@ -237,10 +240,51 @@ export function buildSnapshot(
     return [id, recordKpi(KPI_RECORDS[id])]
   })
 
+  const clusters = clusterStories(records.map((record) => {
+    const source = byId.get(record.sourceId)!
+    const publisher = PUBLISHERS.find((p) => source.type === 'news' && (p.id === source.publisherId || matchesPublisher(source.url, p)))
+    return { record, name: publisher?.name ?? source.name, outletId: publisher?.id ?? source.id }
+  }), now)
+  const pulse: DashboardSnapshot['pulse'] = {
+    clusters: { en: [], hi: [] }, stateCounts: { en: {}, hi: {} }, clusterTimes: { en: [], hi: [] },
+  }
+  for (const lang of LANGS) {
+    const languageClusters = clusters.filter((c) => c.lang === lang)
+    pulse.clusters[lang] = rankClusters(languageClusters).slice(0, 30).map(({ score: _score, ...cluster }) => ({
+      ...cluster, stale: cluster.outlets.some((o) => health.get(o.sourceId) !== 'ok'),
+    }))
+    pulse.clusterTimes[lang] = languageClusters.map((c) => Date.parse(c.firstReportedAt))
+    for (const cluster of languageClusters) {
+      if (Date.parse(cluster.latestAt) < now.getTime() - 3 * 3600_000) continue
+      for (const state of cluster.states) pulse.stateCounts[lang][state] = (pulse.stateCounts[lang][state] ?? 0) + 1
+    }
+  }
+  const indicatorMeta = (id: string, cadence: DataMeta['cadence'], releasedAt: DataMeta['releasedAt']): DataMeta => ({
+    provenance: 'official-live', cadence, releasedAt,
+    source: { name: byId.get(id)?.name.en ?? id, url: byId.get(id)?.homepage ?? '' },
+    checkedAt: data.sources[id]?.lastSuccessAt ?? null, nextReleaseDue: null, health: health.get(id) ?? 'pending',
+  })
+  const latestFx = data.fx?.at(-1)
+  const fxMeta = latestFx ? indicatorMeta('fbil-rates', 'daily', { date: latestFx.date, precision: 'day' }) : null
+  // Weekends/holidays retain their business-day date. An unusually old observation
+  // cannot appear current merely because the HTTP request succeeded.
+  if (fxMeta?.health === 'ok' && now.getTime() - Date.parse(latestFx!.date) > 5 * 86400_000) fxMeta.health = 'stale'
+  const aqiEnabled = byId.has('cpcb-aqi')
+  const aqiCities = aqiEnabled ? data.aqi ?? [] : []
+  const aqiMeta = aqiEnabled ? indicatorMeta('cpcb-aqi', 'hourly', null) : null
+  if (aqiMeta?.health === 'ok' && aqiCities.some((c) => now.getTime() - Date.parse(c.at) > 3 * 3600_000)) aqiMeta.health = 'stale'
+
   return {
     generatedAt: now.toISOString(),
     refreshing,
     updates,
+    pulse,
+    fx: latestFx && fxMeta && byId.has('fbil-rates') ? {
+      pair: 'INR / 1 USD', value: latestFx.value, date: latestFx.date, displayTime: latestFx.displayTime,
+      previous: data.fx.at(-2)?.value ?? null, series: data.fx.slice(-22).map(({ date, value }) => ({ date, value })), meta: fxMeta,
+    } : null,
+    alerts: byId.has('ndma-sachet') ? (data.alerts ?? []).filter((a) => Date.parse(a.at) <= now.getTime() && Date.parse(a.at) >= now.getTime() - 24 * 3600_000).map((a) => ({ ...a, stale: health.get('ndma-sachet') !== 'ok' })) : [],
+    aqi: { enabled: aqiEnabled, ...(!aqiEnabled ? { unavailableReason: aqiUnavailableReason } : {}), cities: aqiCities, meta: aqiMeta },
     sources: sourceViews,
     kpis: Object.fromEntries(kpiEntries) as Record<KpiId, Kpi>,
     datasets: buildDatasets(data, health.get('world-bank') ?? 'pending'),

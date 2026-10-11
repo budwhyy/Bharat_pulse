@@ -8,6 +8,8 @@ export interface RawFeedItem {
   pubDate: string | null
   /** Publisher teaser only; full-content fields (content:encoded) are never read. */
   description: string | null
+  author: string | null
+  category: string | null
 }
 
 const parser = new XMLParser({
@@ -63,6 +65,8 @@ export function parseFeedDocument(xml: string): { title: string | null; items: R
       guid: text(item.guid)?.trim() || null,
       pubDate: text(item.pubDate) ?? text(item['dc:date']) ?? null,
       description: text(item.description),
+      author: text(item.author) ?? text(item['dc:creator']) ?? null,
+      category: text(Array.isArray(item.category) ? item.category[0] : item.category),
     })) }
   }
   return { title, items: (atomEntries ?? []).map((entry) => ({
@@ -71,5 +75,7 @@ export function parseFeedDocument(xml: string): { title: string | null; items: R
     guid: text(entry.id)?.trim() || null,
     pubDate: text(entry.published) ?? text(entry.updated) ?? null,
     description: text(entry.summary),
+    author: null,
+    category: null,
   })) }
 }
