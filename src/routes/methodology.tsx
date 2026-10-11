@@ -13,7 +13,7 @@ function Methodology() {
     <header className="method-header"><Link className="btn" to="/" search={{}}>{t('method.back')}</Link></header>
     <main id="main" className="methodology" tabIndex={-1}>
       <h1>{t('method.title')}</h1>
-      {(['ranking', 'clustering', 'wire', 'sources', 'map'] as const).map((topic) => <section key={topic}><h2>{t(`method.${topic}`)}</h2><p>{t(`method.${topic}Body`)}</p></section>)}
+      {(['ranking', 'clustering', 'wire', 'sources', 'map'] as const).map((topic) => <section key={topic} id={topic}><h2>{t(`method.${topic}`)}</h2><p>{t(`method.${topic}Body`)}</p>{topic === 'map' && <p><a href="https://bharatlas.com/view/gb_adm1" target="_blank" rel="noopener noreferrer">{t('method.mapSourceLink')}</a></p>}</section>)}
     </main>
   </>
 }

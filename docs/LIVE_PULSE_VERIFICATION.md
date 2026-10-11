@@ -3,6 +3,17 @@
 Scope: Phase 1 first screen, state cartogram, story clustering/coverage, FBIL reference rate,
 severe SACHET alerts, gated CPCB adapter, bilingual methodology. No GDELT or analytics.
 
+This file records the original tile-grid release. A later revision replaces its cartogram with
+SVG state boundaries simplified from the Survey of India dataset distributed by bharatlas.
+The map source and current behavior are documented in README.md and docs/ARCHITECTURE.md.
+
+Map revision, 11 Oct 2026: 36 simplified state/UT paths from the Survey of India derivative
+distributed by bharatlas; four internal dispute polygons left unassigned. At 375 and 390 px,
+the first story starts at 397 px with no horizontal overflow. Light and dark axe scans found
+zero violations. Delhi selection filters stories and updates, and the 44 px dropdown provides
+an equivalent touch control. The direct Survey of India download portal returned an error during
+retrieval; the derivative source and processing script are linked in the repository.
+
 ## Automated checks
 
 - `npm.cmd run typecheck`: passed.

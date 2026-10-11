@@ -3,7 +3,7 @@ import type { Localized } from './types'
 export interface StateDef {
   code: string
   name: Localized
-  /** Tile-grid position (column, row). A cartogram: no borders are drawn, so no boundary depiction is implied. */
+  /** Legacy cartogram position retained for existing state fixtures; the first screen uses SVG boundaries. */
   col: number
   row: number
   /** Extra English names/cities that unambiguously imply the state. */

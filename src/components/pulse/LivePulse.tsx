@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { STATES, GRID_COLS, GRID_ROWS } from '../../domain/states'
+import { STATES } from '../../domain/states'
+import { INDIA_MAP_MARKERS, INDIA_MAP_PATHS } from '../../domain/india-map'
 import type { AlertView, ClusterView, DashboardSnapshot, SourceView } from '../../domain/types'
 import { useI18n } from '../../i18n/i18n'
 import { safeStorage } from '../../preferences/storage'
@@ -35,31 +36,35 @@ export function FreshnessStrip({ sources, onOpenSources }: { sources: SourceView
   </button>
 }
 
-export function IndiaTileMap({ counts, alerts, selected, onSelect, pinnedAlerts = [] }: { counts: Record<string, number>; alerts: AlertView[]; selected: string; onSelect: (code: string) => void; pinnedAlerts?: AlertView[] }) {
+export function IndiaStateMap({ counts, alerts, selected, onSelect, pinnedAlerts = [] }: { counts: Record<string, number>; alerts: AlertView[]; selected: string; onSelect: (code: string) => void; pinnedAlerts?: AlertView[] }) {
   const { t, pick } = useI18n()
   const maximum = Math.max(1, ...Object.values(counts))
   return <section className="pulse-map" aria-labelledby="map-heading">
     <div className="pulse-map-heading"><h2 id="map-heading">{t('pulse.map')}</h2><span>{t('pulse.mapLegend')}</span></div>
-    <div className="map-body"><div className="tile-grid" style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, gridTemplateRows: `repeat(${GRID_ROWS}, 24px)` }}>
+    <div className="map-body"><svg className="india-map" viewBox="0 0 285 290" role="group" aria-label={t('pulse.map')}>
       {STATES.map((state) => {
         const count = counts[state.code] ?? 0
         const warning = alerts.some((a) => a.states.includes(state.code))
         const level = count === 0 ? 0 : Math.max(1, Math.ceil(count / maximum * 3))
         const label = `${pick(state.name)}: ${t('pulse.stateCount', { count })}${warning ? ` · ${t('pulse.officialAlert')}` : ''}`
-        return <button key={state.code} type="button" className="state-tile" data-level={level} aria-label={label} title={label}
-          aria-pressed={selected === state.code} onClick={() => onSelect(selected === state.code ? '' : state.code)}
-          style={{ gridColumn: state.col + 1, gridRow: state.row + 1 }}>
-          {state.code}{warning && <span className="map-alert-dot" aria-hidden="true">●</span>}
-        </button>
+        const toggle = () => onSelect(selected === state.code ? '' : state.code)
+        return <g key={state.code}>
+          <path d={INDIA_MAP_PATHS[state.code]} className="state-shape" data-level={level} role="button" tabIndex={0}
+            aria-label={label} aria-pressed={selected === state.code} onClick={toggle}
+            onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggle() } }}>
+            <title>{label}</title>
+          </path>
+          {warning && <circle className="map-alert-dot" cx={INDIA_MAP_MARKERS[state.code]?.[0]} cy={INDIA_MAP_MARKERS[state.code]?.[1]} r="2.8" aria-hidden="true" />}
+        </g>
       })}
-    </div>
+    </svg>
     <div className="map-controls"><label className="state-filter"><span className="sr-only">{t('pulse.stateFilter')}</span>
       <select value={selected} onChange={(e) => onSelect(e.target.value)}>
         <option value="">{t('pulse.allStates')}</option>
         {STATES.map((s) => <option key={s.code} value={s.code}>{pick(s.name)} · {counts[s.code] ?? 0}{alerts.some((a) => a.states.includes(s.code)) ? ` · ${t('pulse.officialAlert')}` : ''}</option>)}
       </select>
     </label>
-      <p className="map-disclaimer">{t('pulse.cartogram')}</p>
+      <p className="map-disclaimer"><a href="/methodology#map">{t('pulse.cartogram')}</a></p>
       <AlertCard alerts={pinnedAlerts} />
     </div></div>
   </section>

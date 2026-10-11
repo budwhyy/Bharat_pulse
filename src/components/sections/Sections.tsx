@@ -1,7 +1,7 @@
 import { TIMELINE } from '../../data/context'
 import { useState } from 'react'
 import { tagStates } from '../../domain/states'
-import { ClusterCard, DeltaChips, FreshnessStrip, IndiaTileMap, PulseIndicators } from '../pulse/LivePulse'
+import { ClusterCard, DeltaChips, FreshnessStrip, IndiaStateMap, PulseIndicators } from '../pulse/LivePulse'
 import { useNow } from '../common/hooks'
 import type { DashboardSnapshot, Lang } from '../../domain/types'
 import { useI18n } from '../../i18n/i18n'
@@ -61,7 +61,7 @@ function Overview({ snapshot, lang, onRefresh, onOpenSources, previousVisit }: S
     <>
       <div className="live-pulse">
         <FreshnessStrip sources={snapshot.sources} onOpenSources={onOpenSources} />
-        <IndiaTileMap counts={snapshot.pulse.stateCounts[lang]} alerts={snapshot.alerts} selected={state} onSelect={setState} pinnedAlerts={alerts} />
+        <IndiaStateMap counts={snapshot.pulse.stateCounts[lang]} alerts={snapshot.alerts} selected={state} onSelect={setState} pinnedAlerts={alerts} />
         <DeltaChips snapshot={snapshot} previous={previousVisit} />
         <section className="cluster-stream" aria-labelledby="pulse-heading">
           <h2 className="sr-only" id="pulse-heading">{t('pulse.stories')}</h2>

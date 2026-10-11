@@ -9,19 +9,19 @@
 .pulse-map-heading h2 { font-size: 13px; }
 .pulse-map-heading > span { font-size: 10px; color: var(--ink-2); }
 .map-body { display: grid; grid-template-columns: minmax(0, 1fr) 98px; gap: 8px; align-items: start; }
-.tile-grid { display: grid; gap: 2px; width: 100%; }
+.india-map { display: block; width: 100%; height: 186px; overflow: visible; }
 .map-controls { display: flex; flex-direction: column; gap: 8px; }
 .map-controls .official-alerts { padding-inline: 4px; }
 .map-controls .official-alerts:has(details[open]) { grid-column: 1 / -1; }
 .map-body:has(details[open]) { position: relative; padding-bottom: 4px; }
 .map-controls .official-alerts details[open] { position: absolute; z-index: 3; top: 0; left: 0; width: 100%; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); box-shadow: var(--shadow); }
-.state-tile { position: relative; min-width: 0; min-height: 0; padding: 0; border: 1px dashed var(--line-strong); border-radius: 3px; font: 600 10px/1 var(--font); color: var(--ink); background: var(--surface); cursor: pointer; }
-.state-tile[data-level='1'] { background: #e2e2e2; color: #151515; border-style: solid; }
-.state-tile[data-level='2'] { background: #939393; color: #111; border-style: solid; }
-.state-tile[data-level='3'] { background: #343434; color: #fff; border-style: solid; }
-.state-tile[aria-pressed='true'] { outline: 2px solid var(--ink); outline-offset: 1px; z-index: 1; text-decoration: underline; }
-.state-tile:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; z-index: 2; }
-.map-alert-dot { position: absolute; right: 1px; top: 0; font-size: 7px; }
+.state-shape { fill: var(--surface-3); stroke: var(--surface); stroke-width: .9; fill-rule: evenodd; cursor: pointer; }
+.state-shape[data-level='1'] { fill: #c5c5c5; }
+.state-shape[data-level='2'] { fill: #8a8a8a; }
+.state-shape[data-level='3'] { fill: #424242; }
+.state-shape:hover, .state-shape[aria-pressed='true'] { stroke: var(--ink); stroke-width: 2; }
+.state-shape:focus-visible { outline: none; stroke: var(--focus); stroke-width: 3; }
+.map-alert-dot { fill: var(--ink); stroke: var(--surface); stroke-width: 1; pointer-events: none; }
 .state-filter { display: flex; align-items: center; }
 .state-filter select { min-height: 44px; max-width: 100%; width: 100%; min-width: 0; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; font-size: 12px; padding: 4px 2px; }
 .map-disclaimer { color: var(--ink-2); font-size: 10px; flex: 1; }

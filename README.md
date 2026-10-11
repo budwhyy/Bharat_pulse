@@ -1,6 +1,6 @@
 # Bharat Pulse
 
-A public, mobile-friendly dashboard of India: a visual Live Pulse with state tiles, story coverage
+A public, mobile-friendly dashboard of India: a visual Live Pulse with a state map, story coverage
 clusters, official alerts and the five newest balanced national updates from
 official and reported sources, headline indicators with their release dates, election results, a
 policy tracker and an analyst risk register — in English and Hindi, light and dark.
@@ -65,7 +65,9 @@ an hour; it only does work that is already due, so extra calls cost nothing.
 
 FBIL is a dated daily reference rate, not a live market quote. See `/methodology` for ranking,
 clustering, wire-copy estimation and limitations; no outlet bias ratings or analytics are used.
-The last-visit timestamp stays in the visitor's localStorage. State tiles depict no boundaries.
+The last-visit timestamp stays in the visitor's localStorage. The map uses simplified Survey of India
+state boundaries via [bharatlas](https://bharatlas.com/view/gb_adm1); the state dropdown remains
+the full-size touch alternative. Four internal dispute polygons in the source are unassigned.
 
 CPCB is **not activated** by a key alone. `DATA_GOV_IN_API_KEY` is server-only. Before setting
 `CPCB_CONCENTRATION_VERIFIED=true`, verify with first-party resource documentation and a real

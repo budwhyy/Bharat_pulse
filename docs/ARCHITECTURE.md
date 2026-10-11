@@ -84,8 +84,9 @@ Score = `0.5^(hours since latest report / 6) * ln(1 + reportingGroups) * languag
 Language spread is 1; official clusters above score 0.35 are pinned before the score order.
 The UI receives the top 30 per language plus all 24-hour cluster first-report times for visit deltas.
 Map counts use clusters with a report in the last three hours and deterministic EN/HI state/city
-matching. No geographic boundaries or political colours are drawn. Tile buttons have ≥24px targets
-at 375px; the equivalent state dropdown is ≥44px. It filters both clusters and the five-update list.
+matching. Simplified Survey of India boundaries (via bharatlas) form the SVG map; its 36 state/UT
+shapes are interactive and four source polygons marked as internal disputes remain unassigned.
+Political colours are not used. The equivalent state dropdown has a ≥44px touch target. It filters both clusters and the five-update list.
 Severe alerts are separate from headline clusters and expand from a pinned official-alert disclosure
 beside the map. Source failures keep cached values with stale/error labels.
 

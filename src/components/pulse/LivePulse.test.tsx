@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { PreferencesProvider } from '../../preferences/PreferencesProvider'
 import { NowContext } from '../common/hooks'
-import { ClusterCard, DeltaChips, FreshnessStrip, IndiaTileMap, useLastVisit } from './LivePulse'
+import { ClusterCard, DeltaChips, FreshnessStrip, IndiaStateMap, useLastVisit } from './LivePulse'
 import { buildSnapshot } from '../../server/snapshot'
 import { emptyCache } from '../../server/cache'
 import type { ClusterView } from '../../domain/types'
@@ -12,14 +12,18 @@ const NOW = new Date('2026-10-11T06:00:00Z')
 const wrap = (children: ReactNode) => <PreferencesProvider getStorage={() => null} getLanguages={() => ['en']}><NowContext.Provider value={NOW}>{children}</NowContext.Provider></PreferencesProvider>
 
 describe('pulse interactions', () => {
-  it('offers equivalent state selection through tiles and the full-size dropdown', () => {
+  it('offers equivalent state selection through map shapes and the full-size dropdown', () => {
     const select = vi.fn()
-    render(wrap(<IndiaTileMap counts={{ DL: 3 }} alerts={[]} selected="" onSelect={select} />))
+    render(wrap(<IndiaStateMap counts={{ DL: 3 }} alerts={[]} selected="" onSelect={select} />))
     fireEvent.click(screen.getByRole('button', { name: 'Delhi: 3 stories in 3 hours' }))
     expect(select).toHaveBeenLastCalledWith('DL')
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'MH' } })
     expect(select).toHaveBeenLastCalledWith('MH')
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Delhi: 3 stories in 3 hours' }), { key: 'Enter' })
+    expect(select).toHaveBeenLastCalledWith('DL')
     expect(screen.getAllByRole('button')).toHaveLength(36)
+    expect(document.querySelectorAll('path.state-shape')).toHaveLength(36)
+    expect([...document.querySelectorAll('path.state-shape')].every((path) => (path.getAttribute('d')?.length ?? 0) > 0)).toBe(true)
   })
   it('opens source settings from freshness and reports pending sources honestly', () => {
     const open = vi.fn()
