@@ -48,7 +48,6 @@ export function normalizeFeedItems(raw: RawFeedItem[], source: NewsSource, now: 
       kind: source.kind,
       title,
       summary,
-      author: entry.author ? toPlainText(entry.author).slice(0, 200) : null,
       url,
       category: categorize({ title, summary, lang: source.lang, defaultCategory: source.defaultCategory }),
       publishedAt: parseFeedDate(entry.pubDate, now, source.defaultOffset),

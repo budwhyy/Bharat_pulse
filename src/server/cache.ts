@@ -1,7 +1,6 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { AlertView, AqiCity, SourceState, UpdateRecord } from '../domain/types'
-import type { FxRow } from './adapters/indicators'
+import type { SourceState, UpdateRecord } from '../domain/types'
 import type { WbSeries, WbSeriesKey } from './adapters/worldbank'
 import type { NewsSource } from './sources'
 
@@ -45,13 +44,10 @@ export interface CacheData {
   rbi: RbiObservation | null
   worldBank: Partial<Record<WbSeriesKey, WbCachedSeries>>
   discovery: DiscoveryState
-  fx: FxRow[]
-  alerts: AlertView[]
-  aqi: AqiCity[]
 }
 
 export function emptyCache(): CacheData {
-  return { version: 1, sources: {}, updates: {}, rbi: null, worldBank: {}, discovery: emptyDiscovery(), fx: [], alerts: [], aqi: [] }
+  return { version: 1, sources: {}, updates: {}, rbi: null, worldBank: {}, discovery: emptyDiscovery() }
 }
 
 export interface CacheStore {

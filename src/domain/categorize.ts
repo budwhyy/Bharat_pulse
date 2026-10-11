@@ -91,7 +91,7 @@ const ROUNDUP = [
   /\blive\s+blog\b/i,
   /\b(top|morning|evening|today'?s)\s+(news|headlines)\b/i,
   /\bnews\s+(today\s+)?live\b/i,
-  /\b(news|morning|evening)\s+(brief|briefing|digest|wrap|roundup)\b/i,
+  /\b(news|morning|evening)\s+(brief|briefing|digest|wrap)\b/i,
   /लाइव\s+ब्लॉग/u,
   /(मुख्य|ताज़ा|ताजा|बड़ी)\s+(और\s+(ताज़ा|ताजा)\s+)?(समाचार|ख़बरें|खबरें)/u,
 ]

@@ -46,7 +46,6 @@ export function mergeUpdates(
         keys,
         title: item.title || existing.title,
         summary: item.summary ?? existing.summary,
-        author: item.author ?? existing.author,
         category: item.category,
         publishedAt,
         timeBasis: publishedAt ? 'published' : existing.timeBasis,
