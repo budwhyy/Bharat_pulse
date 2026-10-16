@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { HeadContent, Link, Outlet, Scripts, createRootRouteWithContext } from '@tanstack/react-router'
 import { useEffect } from 'react'
+import { Analytics } from '@vercel/analytics/react'
 import { PreferencesProvider } from '../preferences/PreferencesProvider'
 import { THEME_BOOT_SCRIPT } from '../preferences/storage'
 import appCss from '../styles/app.css?url'
@@ -47,6 +48,7 @@ function RootComponent() {
           <Outlet />
         </PreferencesProvider>
         <Scripts />
+        <Analytics />
       </body>
     </html>
   )
